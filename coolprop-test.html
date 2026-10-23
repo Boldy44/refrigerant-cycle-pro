@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CoolProp R134a Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    button { padding: 12px; margin-top: 12px; }
+    #result { padding: 12px; background: #eef3fa; margin-top: 15px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Refrigerant Cycle Pro</h1>
+  <h2>CoolProp R134a Test</h2>
+  <p id="loading">Loading CoolProp...</p>
+  <button id="test" disabled>Calculate R134a enthalpy</button>
+  <div id="result">Waiting for engine...</div>
+
+  <script>
+    var Module = {
+      locateFile: function(path) {
+        return path.endsWith(".wasm") ? "./coolprop.wasm" : path;
+      },
+      onRuntimeInitialized: function() {
+        document.getElementById("loading").textContent =
+          "CoolProp loaded successfully.";
+        document.getElementById("test").disabled = false;
+      },
+      onAbort: function(reason) {
+        document.getElementById("loading").textContent =
+          "CoolProp failed to load.";
+        document.getElementById("result").textContent = String(reason);
+      }
+    };
+  </script>
+  <script src="./coolprop.js"></script>
+  <script>
+    document.getElementById("test").addEventListener("click", function() {
+      try {
+        // 5 bar absolute, 20 degrees Celsius
+        var pressurePa = 500000;
+        var temperatureK = 293.15;
+
+        var h = Module.PropsSI(
+          "H", "P", pressurePa, "T", temperatureK, "R134a"
+        );
+
+        if (!Number.isFinite(h) || h <= 0) {
+          throw new Error("Invalid enthalpy returned: " + h);
+        }
+
+        document.getElementById("result").textContent =
+          "Refrigerant: R134a\n" +
+          "Pressure: 5 bar absolute\n" +
+          "Temperature: 20 °C\n" +
+          "Enthalpy: " + (h / 1000).toFixed(2) + " kJ/kg";
+      } catch (error) {
+        document.getElementById("result").textContent =
+          "Calculation error: " + error.message;
+      }
+    });
+  </script>
+</body>
+</html>
