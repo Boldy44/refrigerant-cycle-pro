@@ -19,7 +19,13 @@ const colors=['#168cff','#ff3c45','#1fbd64','#f59e0b'];
 const pointRoot=document.getElementById('points');
 let zoom=1;
 const chartSvg=document.querySelector('.chart');
-function applyZoom(){chartSvg.style.transform=`scale(${zoom})`;chartSvg.style.transformOrigin='center center';chartSvg.style.marginBottom=zoom>1?`${(zoom-1)*80}px`:'0';}
+function applyZoom(){
+  chartSvg.style.transform = 'none';
+  chartSvg.style.marginBottom = '0';
+  chartSvg.setAttribute('viewBox',
+    `${310 - 310 / zoom} ${215 - 215 / zoom} ${620 / zoom} ${430 / zoom}`
+  );
+}
 document.getElementById('zoomIn').addEventListener('click',()=>{zoom=Math.min(2,zoom+0.15);applyZoom()});
 document.getElementById('zoomOut').addEventListener('click',()=>{zoom=Math.max(0.7,zoom-0.15);applyZoom()});
 document.getElementById('zoomReset').addEventListener('click',()=>{zoom=1;applyZoom()});
