@@ -30,7 +30,36 @@ function pressureBarAbsolute(value){const bar=unit.value==='psi'?value/14.503773
 
 function draw(){pointRoot.innerHTML='';states.forEach((s,i)=>{const box=document.createElement('div');box.className='point';box.innerHTML=`<div class="point-head"><span class="num ${s[1]}">${i+1}</span>${s[0]}</div><div class="inputs"><div class="field"><label for="pressure${i}">Pressure (<span class="unit-label">bar</span>)</label><input id="pressure${i}" type="number" step="any" value="${s[2]}" inputmode="decimal"></div><div class="field"><label for="temp${i}">Temperature (°C)</label><input id="temp${i}" type="number" step="any" value="${s[3]}" inputmode="decimal"></div></div>`;pointRoot.appendChild(box)})}
 draw();
-const unit=document.getElementById('unit');unit.addEventListener('change',()=>document.querySelectorAll('.unit-label').forEach(el=>el.textContent=unit.value));
+const unit = document.getElementById('unit');
+let previousUnit = unit.value;
+
+unit.addEventListener('change', () => {
+  const newUnit = unit.value;
+
+  if (newUnit !== previousUnit) {
+    const factor = previousUnit === 'bar'
+      ? 14.5037738
+      : 1 / 14.5037738;
+
+    for (let i = 1; i <= 4; i++) {
+      const field = document.getElementById('pressure' + i);
+      if (!field || field.value.trim() === '') continue;
+
+      const value = Number(field.value);
+      if (!Number.isFinite(value)) continue;
+
+      field.value = Number((value * factor).toPrecision(10));
+    }
+
+    previousUnit = newUnit;
+  }
+
+  document.querySelectorAll('.unit-label').forEach(el => {
+    el.textContent = newUnit;
+  });
+
+  updateSummary();
+});
 document.getElementById('atm').addEventListener('input',updateSummary);
 document.getElementById('reset').addEventListener('click',()=>{draw();document.getElementById('markers').innerHTML='';document.getElementById('status').textContent='Example readings restored. The chart remains schematic until a property engine is connected.';updateSummary()});
 function updateSummary(){let count=0;states.forEach((s,i)=>{let p=document.getElementById('pressure'+i)?.value,t=document.getElementById('temp'+i)?.value;if(p!==''&&t!==''&&Number.isFinite(Number(p))&&Number.isFinite(Number(t))&&Number(p)>0&&Number.isFinite(pressureBarAbsolute(Number(p)))&&pressureBarAbsolute(Number(p))>0)count++});document.getElementById('summary').innerHTML=`<div class="reading">Valid states<strong>${count} / 4</strong></div><div class="reading">Calculated enthalpy<strong>Not available yet</strong></div>`}
