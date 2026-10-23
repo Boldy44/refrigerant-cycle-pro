@@ -17,32 +17,39 @@
   <button id="test" disabled>Calculate R134a enthalpy</button>
   <div id="result">Waiting for engine...</div>
 
-  <script>
-    var Module = {
-      locateFile: function(path) {
-        return path.endsWith(".wasm") ? "./coolprop.wasm" : path;
-      },
-      onRuntimeInitialized: function() {
-        document.getElementById("loading").textContent =
-          "CoolProp loaded successfully.";
-        document.getElementById("test").disabled = false;
-      },
-      onAbort: function(reason) {
-        document.getElementById("loading").textContent =
-          "CoolProp failed to load.";
-        document.getElementById("result").textContent = String(reason);
-      }
-    };
-  </script>
-  <script src="./coolprop.js"></script>
-  <script>
+  <script type="module">
+  import createCoolProp from "./coolprop.js";
+
+  let Module;
+
+  const loading = document.getElementById("loading");
+  const result = document.getElementById("result");
+  const button = document.getElementById("test");
+
+  try {
+    Module = await createCoolProp({
+      locateFile: (path) =>
+        path.endsWith(".wasm") ? "./coolprop.wasm" : path
+    });
+
+    loading.textContent = "CoolProp loaded successfully.";
+    button.disabled = false;
+
+    // Make the initialized engine available to the test button.
+    window.coolpropModule = Module;
+  } catch (error) {
+    loading.textContent = "CoolProp failed to load.";
+    result.textContent = String(error);
+    console.error(error);
+  }
+</script>  <script>
     document.getElementById("test").addEventListener("click", function() {
       try {
         // 5 bar absolute, 20 degrees Celsius
         var pressurePa = 500000;
         var temperatureK = 293.15;
 
-        var h = Module.PropsSI(
+        var h = window.coolpropModule.PropsSI(
           "H", "P", pressurePa, "T", temperatureK, "R134a"
         );
 
