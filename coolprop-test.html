@@ -138,6 +138,14 @@ chart.innerHTML = `
   <text x="190" y="415" font-size="14">Enthalpy (kJ/kg)</text>
   <text x="15" y="215" font-size="14"
         transform="rotate(-90 15 215)">Pressure (bar)</text>
+        <circle
+  cx="${55 + ((h / 1000) - 150) * 0.85}"
+  cy="${380 - (Math.log(8 / 2) / Math.log(14 / 2)) * 300}"
+  r="6"
+  fill="red"
+  stroke="white"
+  stroke-width="2"
+/>
 `;
       } catch (error) {
         document.getElementById("result").textContent =
