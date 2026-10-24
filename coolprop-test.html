@@ -100,11 +100,11 @@ saturationData.map(function(point) {
 const chart = document.getElementById("phChart");
 const liquidPoints = saturationData.map(p => ({
   x: 55 + (p.liquidKJ - 150) * 0.85,
-  y: 380 - (p.pressureBar - 2) * 25
+  y: 380 - (Math.log(p.pressureBar / 2) / Math.log(14 / 2)) * 300
 }));
 const vapourPoints = saturationData.map(p => ({
   x: 55 + (p.vapourKJ - 150) * 0.85,
-  y: 380 - (p.pressureBar - 2) * 25
+  y: 380 - (Math.log(p.pressureBar / 2) / Math.log(14 / 2)) * 300
 }));
 
 const makePath = points =>
@@ -118,7 +118,7 @@ chart.innerHTML = `
   <path d="${makePath(vapourPoints)}"
         fill="none" stroke="orange" stroke-width="3"/>
          ${[2, 4, 6, 8, 10, 12, 14].map(p => {
-    const y = 380 - (p - 2) * 25;
+    const y = 380 - (Math.log(p / 2) / Math.log(14 / 2)) * 300;
     return `
       <line x1="45" y1="${y}" x2="300" y2="${y}"
             stroke="#d1d5db" stroke-width="1"/>
