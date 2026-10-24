@@ -46,8 +46,8 @@
     document.getElementById("test").addEventListener("click", function() {
       try {
         // 5 bar absolute, 20 degrees Celsius
-        var pressurePa = 500000;
-        var temperatureK = 293.15;
+        var pressurePa = 800000;
+        var temperatureK = 303.15;
 
         var h = window.coolpropModule.PropsSI(
           "H", "P", pressurePa, "T", temperatureK, "R134a"
@@ -59,8 +59,8 @@
 
         document.getElementById("result").textContent =
           "Refrigerant: R134a\n" +
-          "Pressure: 5 bar absolute\n" +
-          "Temperature: 20 °C\n" +
+          "Pressure: 8 bar absolute\n" +
+          "Temperature: 30 °C\n" +
           "Enthalpy: " + (h / 1000).toFixed(2) + " kJ/kg";
       } catch (error) {
         document.getElementById("result").textContent =
