@@ -164,6 +164,15 @@ chart.innerHTML = `
   stroke-width="2"
   data-point="Compressor discharge"
 />
+<circle
+  cx="${55 + ((hCondenser / 1000) - 150) * 0.85}"
+  cy="${380 - (12 - 2) * 25}"
+  r="6"
+  fill="limegreen"
+  stroke="white"
+  stroke-width="2"
+  data-point="Condenser outlet"
+/>
 `;
       } catch (error) {
         document.getElementById("result").textContent =
