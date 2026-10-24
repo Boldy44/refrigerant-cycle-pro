@@ -51,7 +51,11 @@
 
         var h = window.coolpropModule.PropsSI(
           "H", "P", pressurePa, "T", temperatureK, "R134a"
-        );
+        );var hLiquid = window.coolpropModule.PropsSI(
+  "H", "P", pressurePa, "Q", 0, "R134a"
+);var hVapour = window.coolpropModule.PropsSI(
+  "H", "P", pressurePa, "Q", 1, "R134a"
+);
 
         if (!Number.isFinite(h) || h <= 0) {
           throw new Error("Invalid enthalpy returned: " + h);
@@ -61,7 +65,9 @@
           "Refrigerant: R134a\n" +
           "Pressure: 8 bar absolute\n" +
           "Temperature: 30 °C\n" +
-          "Enthalpy: " + (h / 1000).toFixed(2) + " kJ/kg";
+          "Enthalpy: " + (h / 1000).toFixed(2) + " kJ/kg\n" +
+"Saturated liquid: " + (hLiquid / 1000).toFixed(2) + " kJ/kg\n" +
+"Saturated vapour: " + (hVapour / 1000).toFixed(2) + " kJ/kg";
       } catch (error) {
         document.getElementById("result").textContent =
           "Calculation error: " + error.message;
