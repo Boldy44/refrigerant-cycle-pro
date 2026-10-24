@@ -17,7 +17,7 @@
   <button id="test" disabled>Calculate R134a enthalpy</button>
   <div id="result">Waiting for engine...</div>
 <h3>R134a Pressure–Enthalpy Chart</h3>
-<svg id="phChart" viewBox="0 0 620 430"
+<svg id="phChart" viewBox="0 0 700 430"
      style="width:100%;background:#f5f8fc;border:1px solid #ccc;border-radius:8px;">
 </svg>
   <script type="module">
@@ -130,7 +130,7 @@ chart.innerHTML = `
             font-size="12" fill="#374151">${p}</text>
     `;
   }).join("")}
-    ${[150, 200, 250, 300, 350, 400, 450].map(h => {
+    ${[150, 200, 250, 300, 350, 400, 450, 500].map(h => {
     const x = 55 + (h - 150) * 0.85;
     return `
       <line x1="${x}" y1="80" x2="${x}" y2="380"
@@ -150,6 +150,15 @@ chart.innerHTML = `
   stroke="white"
   stroke-width="2"
   data-point="R134a test point"
+/>
+<circle
+  cx="${55 + ((hDischarge / 1000) - 150) * 0.85}"
+  cy="${380 - (12 - 2) * 25}"
+  r="6"
+  fill="orange"
+  stroke="white"
+  stroke-width="2"
+  data-point="Compressor discharge"
 />
 `;
       } catch (error) {
