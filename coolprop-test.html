@@ -55,7 +55,25 @@
   "H", "P", pressurePa, "Q", 0, "R134a"
 );var hVapour = window.coolpropModule.PropsSI(
   "H", "P", pressurePa, "Q", 1, "R134a"
-);
+);var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14];
+
+var saturationData = saturationPressuresBar.map(function(bar) {
+  var p = bar * 100000;
+
+  var liquid = window.coolpropModule.PropsSI(
+    "H", "P", p, "Q", 0, "R134a"
+  );
+
+  var vapour = window.coolpropModule.PropsSI(
+    "H", "P", p, "Q", 1, "R134a"
+  );
+
+  return {
+    pressureBar: bar,
+    liquidKJ: liquid / 1000,
+    vapourKJ: vapour / 1000
+  };
+});
 
         if (!Number.isFinite(h) || h <= 0) {
           throw new Error("Invalid enthalpy returned: " + h);
@@ -67,7 +85,14 @@
           "Temperature: 30 °C\n" +
           "Enthalpy: " + (h / 1000).toFixed(2) + " kJ/kg\n" +
 "Saturated liquid: " + (hLiquid / 1000).toFixed(2) + " kJ/kg\n" +
-"Saturated vapour: " + (hVapour / 1000).toFixed(2) + " kJ/kg";
+"Saturated vapour: " + (hVapour / 1000).toFixed(2) + " kJ/kg"+
+"\n\nR134a SATURATION DATA\n" +
+"Pressure | Liquid | Vapour\n" +
+saturationData.map(function(point) {
+  return point.pressureBar + " bar | " +
+    point.liquidKJ.toFixed(2) + " | " +
+    point.vapourKJ.toFixed(2) + " kJ/kg";
+}).join("\n");
       } catch (error) {
         document.getElementById("result").textContent =
           "Calculation error: " + error.message;
