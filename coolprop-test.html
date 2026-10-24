@@ -65,6 +65,7 @@
         var hCondenser = window.coolpropModule.PropsSI(
   "H", "P", 1200000, "T", 303.15, "R134a"
 );
+        var hExpansion = hCondenser;
         console.log("Condenser outlet enthalpy:", (hCondenser / 1000).toFixed(2), "kJ/kg");
         console.log("Compressor discharge enthalpy:", (hDischarge / 1000).toFixed(2), "kJ/kg");
 
@@ -172,6 +173,15 @@ chart.innerHTML = `
   stroke="white"
   stroke-width="2"
   data-point="Condenser outlet"
+/>
+<circle
+  cx="${55 + ((hExpansion / 1000) - 150) * 0.85}"
+  cy="${380 - (2 - 2) * 25}"
+  r="6"
+  fill="purple"
+  stroke="white"
+  stroke-width="2"
+  data-point="Expansion valve outlet"
 />
 `;
       } catch (error) {
