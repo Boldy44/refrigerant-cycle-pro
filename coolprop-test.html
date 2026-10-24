@@ -16,7 +16,10 @@
   <p id="loading">Loading CoolProp...</p>
   <button id="test" disabled>Calculate R134a enthalpy</button>
   <div id="result">Waiting for engine...</div>
-
+<h3>R134a Pressure–Enthalpy Chart</h3>
+<svg id="phChart" viewBox="0 0 620 430"
+     style="width:100%;background:#f5f8fc;border:1px solid #ccc;border-radius:8px;">
+</svg>
   <script type="module">
   import createCoolProp from "./coolprop.js";
 
@@ -93,6 +96,31 @@ saturationData.map(function(point) {
     point.liquidKJ.toFixed(2) + " | " +
     point.vapourKJ.toFixed(2) + " kJ/kg";
 }).join("\n");
+        
+const chart = document.getElementById("phChart");
+const liquidPoints = saturationData.map(p => ({
+  x: 55 + (p.liquidKJ - 150) * 0.85,
+  y: 380 - (p.pressureBar - 2) * 25
+}));
+const vapourPoints = saturationData.map(p => ({
+  x: 55 + (p.vapourKJ - 150) * 0.85,
+  y: 380 - (p.pressureBar - 2) * 25
+}));
+
+const makePath = points =>
+  points.map((p, i) =>
+    (i === 0 ? "M" : "L") + p.x + "," + p.y
+  ).join(" ");
+
+chart.innerHTML = `
+  <path d="${makePath(liquidPoints)}"
+        fill="none" stroke="blue" stroke-width="3"/>
+  <path d="${makePath(vapourPoints)}"
+        fill="none" stroke="orange" stroke-width="3"/>
+  <text x="190" y="415" font-size="14">Enthalpy (kJ/kg)</text>
+  <text x="15" y="215" font-size="14"
+        transform="rotate(-90 15 215)">Pressure (bar)</text>
+`;
       } catch (error) {
         document.getElementById("result").textContent =
           "Calculation error: " + error.message;
