@@ -152,13 +152,13 @@ chart.innerHTML = `
   <text x="15" y="215" font-size="14"
         transform="rotate(-90 15 215)">Pressure (bar)</text>
         <circle
-  cx="${55 + ((h / 1000) - 150) * 0.85}"
- cy="${380 - (8 - 2) * 25}"
+  cx="${55 + ((hSuction / 1000) - 150) * 0.85}"
+ cy="${380 - (2 - 2) * 25}"
   r="6"
   fill="red"
   stroke="white"
   stroke-width="2"
-  data-point="R134a test point"
+  data-point="Compressor suction"
 />
 <circle
   cx="${55 + ((hDischarge / 1000) - 150) * 0.85}"
