@@ -153,6 +153,15 @@ chart.innerHTML = `
   stroke-width="2"
   stroke-dasharray="6,4"
 />
+<line
+  x1="${55 + ((hExpansion / 1000) - 150) * 0.85}"
+  y1="${380 - (2 - 2) * 25}"
+  x2="${55 + ((hSuction / 1000) - 150) * 0.85}"
+  y2="${380 - (2 - 2) * 25}"
+  stroke="blue"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
   <path d="${makePath(liquidPoints)}"
         fill="none" stroke="blue" stroke-width="3"/>
   <path d="${makePath(vapourPoints)}"
