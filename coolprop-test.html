@@ -59,6 +59,10 @@
 );var hVapour = window.coolpropModule.PropsSI(
   "H", "P", pressurePa, "Q", 1, "R134a"
 );var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14];
+        var hSuction = window.coolpropModule.PropsSI(
+  "H", "P", 200000, "T", 273.15, "R134a"
+);
+        console.log("Compressor suction enthalpy:", (hSuction / 1000).toFixed(2), "kJ/kg");
         var hDischarge = window.coolpropModule.PropsSI(
   "H", "P", 1200000, "T", 348.15, "R134a"
 );
