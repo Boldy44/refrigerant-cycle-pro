@@ -29,6 +29,14 @@
   value="0"
   step="0.1"
 />
+  <label for="dischargePressure">Discharge pressure (bar absolute):</label>
+<input
+  type="number"
+  id="dischargePressure"
+  value="12"
+  min="0.1"
+  step="0.1"
+/>
   <button id="test" disabled>Calculate R134a enthalpy</button>
   <div id="result">Waiting for engine...</div>
 <h3>R134a Pressure–Enthalpy Chart</h3>
@@ -81,11 +89,21 @@
   "H", "P", pressurePa, "Q", 1, "R134a"
 );var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14];
         var suctionPressure = Number(document.getElementById("suctionPressure").value);
+        var dischargePressure = Number(document.getElementById("dischargePressure").value);
+        var dischargePressurePa = dischargePressure * 100000;
         var suctionTemperature = Number(document.getElementById("suctionTemperature").value);
         var suctionTemperatureK = suctionTemperature + 273.15;
         var suctionPressurePa = suctionPressure * 100000;
         if (!Number.isFinite(suctionPressure) || suctionPressure < 2 || suctionPressure > 10) {
   alert("Please enter a suction pressure between 2 and 10 bar absolute.");
+  return;
+}
+        if (
+  !Number.isFinite(dischargePressure) ||
+  dischargePressure <= suctionPressure ||
+  dischargePressure > 14
+) {
+  alert("Discharge pressure must be greater than suction pressure and no higher than 14 bar absolute.");
   return;
 }
         var suctionSaturationK = window.coolpropModule.PropsSI(
@@ -104,10 +122,10 @@
 );
         console.log("Compressor suction enthalpy:", (hSuction / 1000).toFixed(2), "kJ/kg");
         var hDischarge = window.coolpropModule.PropsSI(
-  "H", "P", 1200000, "T", 348.15, "R134a"
+  "H", "P", dischargePressurePa, "T", 348.15, "R134a"
 );
         var hCondenser = window.coolpropModule.PropsSI(
-  "H", "P", 1200000, "T", 303.15, "R134a"
+  "H", "P", dischargePressurePa, "T", 303.15, "R134a"
 );
         var hExpansion = hCondenser;
         console.log("Condenser outlet enthalpy:", (hCondenser / 1000).toFixed(2), "kJ/kg");
@@ -174,23 +192,23 @@ chart.innerHTML = `
   x1="${55 + ((hSuction / 1000) - 150) * 0.85}"
   y1="${380 - (suctionPressure - 2) * 25}"
   x2="${55 + ((hDischarge / 1000) - 150) * 0.85}"
-  y2="${380 - (12 - 2) * 25}"
+  y2="${380 - (dischargePressure - 2) * 25}"
   stroke="red"
   stroke-width="2"
   stroke-dasharray="6,4"
 />
 <line
   x1="${55 + ((hDischarge / 1000) - 150) * 0.85}"
-  y1="${380 - (12 - 2) * 25}"
+  y1="${380 - (dischargePressure - 2) * 25}"
   x2="${55 + ((hCondenser / 1000) - 150) * 0.85}"
-  y2="${380 - (12 - 2) * 25}"
+  y2="${380 - (dischargePressure - 2) * 25}"
   stroke="green"
   stroke-width="2"
   stroke-dasharray="6,4"
 />
 <line
   x1="${55 + ((hCondenser / 1000) - 150) * 0.85}"
-  y1="${380 - (12 - 2) * 25}"
+  y1="${380 - (dischargePressure - 2) * 25}"
   x2="${55 + ((hExpansion / 1000) - 150) * 0.85}"
   y2="${380 - (suctionPressure - 2) * 25}"
   stroke="purple"
@@ -242,7 +260,7 @@ chart.innerHTML = `
 />
 <circle
   cx="${55 + ((hDischarge / 1000) - 150) * 0.85}"
-  cy="${380 - (12 - 2) * 25}"
+  cy="${380 - (dischargePressure - 2) * 25}"
   r="6"
   fill="orange"
   stroke="white"
@@ -251,7 +269,7 @@ chart.innerHTML = `
 />
 <circle
   cx="${55 + ((hCondenser / 1000) - 150) * 0.85}"
-  cy="${380 - (12 - 2) * 25}"
+  cy="${380 - (dischargePressure - 2) * 25}"
   r="6"
   fill="limegreen"
   stroke="white"
