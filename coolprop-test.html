@@ -136,6 +136,10 @@ var saturationData = saturationPressuresBar.map(function(bar) {
         }
 
         document.getElementById("result").textContent =
+         "COMPRESSOR SUCTION\n" +
+"Pressure: " + suctionPressure + " bar absolute\n" +
+"Temperature: " + suctionTemperature + " °C\n" +
+"Enthalpy: " + (hSuction / 1000).toFixed(2) + " kJ/kg\n\n" +
           "Refrigerant: R134a\n" +
           "Pressure: 8 bar absolute\n" +
           "Temperature: 30 °C\n" +
