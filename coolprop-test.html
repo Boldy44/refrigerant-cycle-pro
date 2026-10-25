@@ -22,6 +22,13 @@
   min="0.1"
   step="0.1"
 />
+  <label for="suctionTemperature">Suction temperature (°C):</label>
+<input
+  type="number"
+  id="suctionTemperature"
+  value="0"
+  step="0.1"
+/>
   <button id="test" disabled>Calculate R134a enthalpy</button>
   <div id="result">Waiting for engine...</div>
 <h3>R134a Pressure–Enthalpy Chart</h3>
@@ -74,13 +81,26 @@
   "H", "P", pressurePa, "Q", 1, "R134a"
 );var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14];
         var suctionPressure = Number(document.getElementById("suctionPressure").value);
+        var suctionTemperature = Number(document.getElementById("suctionTemperature").value);
+        var suctionTemperatureK = suctionTemperature + 273.15;
         var suctionPressurePa = suctionPressure * 100000;
         if (!Number.isFinite(suctionPressure) || suctionPressure < 2 || suctionPressure > 10) {
   alert("Please enter a suction pressure between 2 and 10 bar absolute.");
   return;
 }
+        var suctionSaturationK = window.coolpropModule.PropsSI(
+  "T", "P", suctionPressurePa, "Q", 1, "R134a"
+);
+        if (suctionTemperatureK <= suctionSaturationK + 0.1) {
+  alert(
+    "Suction temperature must be above saturation temperature (" +
+    (suctionSaturationK - 273.15).toFixed(1) +
+    "°C) at the entered pressure."
+  );
+  return;
+}
         var hSuction = window.coolpropModule.PropsSI(
-  "H", "P", suctionPressurePa, "T", 273.15, "R134a"
+  "H", "P", suctionPressurePa, "T", suctionTemperatureK, "R134a"
 );
         console.log("Compressor suction enthalpy:", (hSuction / 1000).toFixed(2), "kJ/kg");
         var hDischarge = window.coolpropModule.PropsSI(
