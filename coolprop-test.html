@@ -167,6 +167,7 @@
   "H", "P", dischargePressurePa, "T", condenserTemperatureK, "R134a"
 );
         var hExpansion = hCondenser;
+        var refrigerationEffect = (hSuction - hExpansion) / 1000;
         console.log("Condenser outlet enthalpy:", (hCondenser / 1000).toFixed(2), "kJ/kg");
         console.log("Compressor discharge enthalpy:", (hDischarge / 1000).toFixed(2), "kJ/kg");
 
@@ -195,6 +196,7 @@ var saturationData = saturationPressuresBar.map(function(bar) {
         document.getElementById("result").textContent =
           "CONDENSER OUTLET\n" +
 "Liquid subcooling: " + liquidSubcooling.toFixed(2) + " K\n" +
+          "Refrigeration effect: " + refrigerationEffect.toFixed(2) + " kJ/kg\n" +
 "\n" +
          "COMPRESSOR SUCTION\n" +
 "Pressure: " + suctionPressure + " bar absolute\n" +
