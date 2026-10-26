@@ -159,6 +159,10 @@
   alert("Please enter a condenser outlet temperature between -40°C and 100°C.");
   return;
 }
+        var condensingSaturationK = window.coolpropModule.PropsSI(
+  "T", "P", dischargePressurePa, "Q", 0, "R134a"
+);
+        var liquidSubcooling = condensingSaturationK - condenserTemperatureK;
         var hCondenser = window.coolpropModule.PropsSI(
   "H", "P", dischargePressurePa, "T", condenserTemperatureK, "R134a"
 );
@@ -189,6 +193,9 @@ var saturationData = saturationPressuresBar.map(function(bar) {
         }
 
         document.getElementById("result").textContent =
+          "CONDENSER OUTLET\n" +
+"Liquid subcooling: " + liquidSubcooling.toFixed(2) + " K\n" +
+"\n" +
          "COMPRESSOR SUCTION\n" +
 "Pressure: " + suctionPressure + " bar absolute\n" +
 "Temperature: " + suctionTemperature + " °C\n" +
