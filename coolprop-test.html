@@ -151,6 +151,7 @@
         var hDischarge = window.coolpropModule.PropsSI(
   "H", "P", dischargePressurePa, "T", dischargeTemperatureK, "R134a"
 );
+        var compressorWork = (hDischarge - hSuction) / 1000;
         if (
   !Number.isFinite(condenserTemperature) ||
   condenserTemperature < -40 ||
@@ -168,6 +169,9 @@
 );
         var hExpansion = hCondenser;
         var refrigerationEffect = (hSuction - hExpansion) / 1000;
+        var cop = compressorWork > 0 && refrigerationEffect > 0
+  ? refrigerationEffect / compressorWork
+  : NaN;
         console.log("Condenser outlet enthalpy:", (hCondenser / 1000).toFixed(2), "kJ/kg");
         console.log("Compressor discharge enthalpy:", (hDischarge / 1000).toFixed(2), "kJ/kg");
 
@@ -197,6 +201,8 @@ var saturationData = saturationPressuresBar.map(function(bar) {
           "CONDENSER OUTLET\n" +
 "Liquid subcooling: " + liquidSubcooling.toFixed(2) + " K\n" +
           "Refrigeration effect: " + refrigerationEffect.toFixed(2) + " kJ/kg\n" +
+          "Compressor work: " + compressorWork.toFixed(2) + " kJ/kg\n" +
+          "COP: " + (Number.isFinite(cop) ? cop.toFixed(2) : "Invalid operating conditions") + "\n" +
 "\n" +
          "COMPRESSOR SUCTION\n" +
 "Pressure: " + suctionPressure + " bar absolute\n" +
