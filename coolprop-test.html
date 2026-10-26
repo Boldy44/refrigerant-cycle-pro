@@ -33,6 +33,13 @@
 <input
   type="number"
   id="dischargePressure"
+  <label for="dischargeTemperature">Discharge temperature (°C):</label>
+<input
+  type="number"
+  id="dischargeTemperature"
+  value="75"
+  step="0.1"
+/>
   value="12"
   min="0.1"
   step="0.1"
@@ -90,6 +97,8 @@
 );var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14];
         var suctionPressure = Number(document.getElementById("suctionPressure").value);
         var dischargePressure = Number(document.getElementById("dischargePressure").value);
+        var dischargeTemperature = Number(document.getElementById("dischargeTemperature").value);
+        var dischargeTemperatureK = dischargeTemperature + 273.15;
         var dischargePressurePa = dischargePressure * 100000;
         var suctionTemperature = Number(document.getElementById("suctionTemperature").value);
         var suctionTemperatureK = suctionTemperature + 273.15;
@@ -121,8 +130,16 @@
   "H", "P", suctionPressurePa, "T", suctionTemperatureK, "R134a"
 );
         console.log("Compressor suction enthalpy:", (hSuction / 1000).toFixed(2), "kJ/kg");
+        if (
+  !Number.isFinite(dischargeTemperature) ||
+  dischargeTemperature < -40 ||
+  dischargeTemperature > 150
+) {
+  alert("Please enter a discharge temperature between -40°C and 150°C.");
+  return;
+}
         var hDischarge = window.coolpropModule.PropsSI(
-  "H", "P", dischargePressurePa, "T", 348.15, "R134a"
+  "H", "P", dischargePressurePa, "T", dischargeTemperatureK, "R134a"
 );
         var hCondenser = window.coolpropModule.PropsSI(
   "H", "P", dischargePressurePa, "T", 303.15, "R134a"
