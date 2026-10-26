@@ -127,6 +127,7 @@
         var suctionSaturationK = window.coolpropModule.PropsSI(
   "T", "P", suctionPressurePa, "Q", 1, "R134a"
 );
+        var suctionSuperheat = suctionTemperatureK - suctionSaturationK;
         if (suctionTemperatureK <= suctionSaturationK + 0.1) {
   alert(
     "Suction temperature must be above saturation temperature (" +
@@ -191,7 +192,8 @@ var saturationData = saturationPressuresBar.map(function(bar) {
          "COMPRESSOR SUCTION\n" +
 "Pressure: " + suctionPressure + " bar absolute\n" +
 "Temperature: " + suctionTemperature + " °C\n" +
-"Enthalpy: " + (hSuction / 1000).toFixed(2) + " kJ/kg\n\n" +
+"Enthalpy: " + (hSuction / 1000).toFixed(2) + " kJ/kg\n" +
+"Suction superheat: " + suctionSuperheat.toFixed(2) + " K\n\n" +
           "Refrigerant: R134a\n" +
           "Pressure: 8 bar absolute\n" +
           "Temperature: 30 °C\n" +
