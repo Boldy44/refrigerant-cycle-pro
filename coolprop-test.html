@@ -138,7 +138,7 @@ button {
   "H", "P", pressurePa, "Q", 0, refrigerant
 );var hVapour = window.coolpropModule.PropsSI(
   "H", "P", pressurePa, "Q", 1, refrigerant
-var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14, maxDischargePressure].filter((p, i, arr) => p <= maxDischargePressure && arr.indexOf(p) === i);
+
        
         var suctionPressure = Number(document.getElementById("suctionPressure").value);
         var dischargePressure = Number(document.getElementById("dischargePressure").value);
@@ -150,8 +150,13 @@ var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14, maxDischargePressure].filt
         var suctionTemperature = Number(document.getElementById("suctionTemperature").value);
         var suctionTemperatureK = suctionTemperature + 273.15;
         var suctionPressurePa = suctionPressure * 100000;
+        var criticalPressureBar = window.coolpropModule.PropsSI("PCRIT", refrigerant) / 100000;
+        if (!Number.isFinite(criticalPressureBar) || criticalPressureBar <= 0) {
+  throw new Error("Could not calculate critical pressure for " + refrigerant);
+}
         var maxSuctionPressure = refrigerant === "R134a" ? 10 : 25;
         var maxDischargePressure = refrigerant === "R134a" ? 14 : 30;
+        var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14, maxDischargePressure].filter((p, i, arr) => p <= maxDischargePressure && p < criticalPressureBar && arr.indexOf(p) === i);
         if (!Number.isFinite(suctionPressure) || suctionPressure < 2 || suctionPressure > maxSuctionPressure) {
   alert("Please enter a suction pressure between 2 and " + maxSuctionPressure + " bar absolute.");
   return;
