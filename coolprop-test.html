@@ -150,6 +150,7 @@ button {
         var dischargePressurePa = dischargePressure * 100000;
         var suctionTemperature = Number(document.getElementById("suctionTemperature").value);
         var suctionTemperatureK = suctionTemperature + 273.15;
+        var suctionPressurePa = suctionPressure * 100000;
         var criticalPressureBar = window.coolpropModule.PropsSI("PCRIT", "", 0, "", 0, refrigerant) / 100000;
        if (!Number.isFinite(criticalPressureBar) || criticalPressureBar <= 0) {
   throw new Error("Could not calculate critical pressure for " + refrigerant);
