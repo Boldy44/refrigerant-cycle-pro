@@ -89,7 +89,7 @@ button {
 />
   <button id="test" disabled>Calculate R134a enthalpy</button>
   <div id="result">Waiting for engine...</div>
-<h3>R134a Pressure–Enthalpy Chart</h3>
+<h3 id="chartTitle">R134a Pressure–Enthalpy Chart</h3>
   <p>
   🔴 Red — Compressor suction<br>
   🟠 Orange — Compressor discharge<br>
@@ -128,6 +128,7 @@ button {
     document.getElementById("test").addEventListener("click", function() {
       try {
          var refrigerant = document.getElementById("refrigerant").value;
+        document.getElementById("chartTitle").textContent = refrigerant + " Pressure–Enthalpy Chart";
         // 5 bar absolute, 20 degrees Celsius
         var pressurePa = 800000;
         var temperatureK = 303.15;
