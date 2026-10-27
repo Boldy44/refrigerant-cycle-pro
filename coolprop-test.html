@@ -360,7 +360,7 @@ chart.innerHTML = `
   data-point="Compressor suction"
 />
 <circle
-  cx="${55 + ((hDischarge / 1000) - 150) * 0.85}"
+  cx="${chartX(hDischarge / 1000)}"
   cy="${chartY(dischargePressure)}"
   r="6"
   fill="orange"
