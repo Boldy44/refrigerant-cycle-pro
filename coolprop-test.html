@@ -211,6 +211,10 @@ button {
   "T", "P", dischargePressurePa, "Q", 0, refrigerant
 );
         var liquidSubcooling = condensingSaturationK - condenserTemperatureK;
+        if (liquidSubcooling < 0) {
+  alert("Warning: Condenser outlet is not subcooled liquid. Check the discharge pressure and condenser outlet temperature.");
+  return;
+}
         var hCondenser = window.coolpropModule.PropsSI(
   "H", "P", dischargePressurePa, "T", condenserTemperatureK, refrigerant
 );
