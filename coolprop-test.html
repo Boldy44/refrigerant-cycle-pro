@@ -158,7 +158,8 @@ button {
 }
         var maxSuctionPressure = refrigerant === "R134a" ? 10 : 25;
         var maxDischargePressure = refrigerant === "R134a" ? 14 : 30;
-        var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, maxDischargePressure].filter((p, i, arr) => p <= maxDischargePressure && p < criticalPressureBar && arr.indexOf(p) === i);
+        var maxChartPressure = Math.min(criticalPressureBar * 0.95, 40);
+        var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, maxChartPressure].filter((p, i, arr) => p <= maxChartPressure && p < criticalPressureBar && arr.indexOf(p) === i);
         if (!Number.isFinite(suctionPressure) || suctionPressure < 2 || suctionPressure > maxSuctionPressure) {
   alert("Please enter a suction pressure between 2 and " + maxSuctionPressure + " bar absolute.");
   return;
