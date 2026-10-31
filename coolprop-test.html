@@ -333,7 +333,7 @@ chart.innerHTML = `
         fill="none" stroke="blue" stroke-width="3"/>
   <path d="${makePath(vapourPoints)}"
         fill="none" stroke="orange" stroke-width="3"/>
-         ${saturationPressuresBar.map(p => {
+         ${saturationPressuresBar.filter(p => [2, 4, 6, 8, 10, 14, 20, 30].includes(p)).map(p => {
     const y = chartY(p);
     return `
       <line x1="45" y1="${y}" x2="650" y2="${y}"
