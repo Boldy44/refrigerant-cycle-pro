@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Refrigerant Cycle Pro — P–h Chart</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    button { padding: 12px; margin-top: 12px; }
+    #result { padding: 12px; background: #eef3fa; margin-top: 15px; white-space: pre-wrap; }
+    label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input[type="number"] {
+  display: block;
+  width: 100%;
+  max-width: 350px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  font-size: 16px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+
+button {
+  display: block;
+  padding: 12px 18px;
+  margin-top: 15px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+    body { max-width: 900px; background:#f8fafc; color:#172334; line-height:1.5; }
+    h1 { margin-bottom: 0; color:#103d65; }
+    .subtitle { margin-top:4px; color:#52657b; }
+    select, input[type="text"] { width:100%; max-width:350px; box-sizing:border-box; padding:12px; border:1px solid #9daec0; border-radius:6px; font-size:16px; background:white; }
+    #result { border-radius:8px; overflow-wrap:anywhere; }
+    #phChart { display:block; margin-top:12px; }
+    .tools { background:white; border:1px solid #d7e1ed; border-radius:10px; padding:16px; margin-top:20px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .actions button { background:#0f5487; color:white; border:0; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .hint { color:#52657b; font-size:14px; }
+    #savedJobs button { margin:5px 8px 5px 0; padding:7px; font-size:14px; }
+    .saved-job { border-top:1px solid #e2e8f0; padding:10px 0; }
+    #phChart circle[data-point] { cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h1>Refrigerant Cycle Pro</h1>
+  <p class="subtitle">Refrigeration cycle calculator and interactive pressure–enthalpy chart</p>
+  <p id="loading">Loading CoolProp...</p>
+  <label for="refrigerant">Select refrigerant:</label>
+<select id="refrigerant">
+  <option value="R134a">R134a</option>
+  <option value="R32">R32</option>
+  <option value="R410A">R410A</option>
+  <option value="R290">R290</option>
+  <option value="R600a">R600a</option>
+</select>
+  <label for="suctionPressure">Suction pressure (bar absolute):</label>
+<input
+  type="number"
+  id="suctionPressure"
+  value="2"
+  min="0.1"
+  step="0.1"
+/>
+  <label for="suctionTemperature">Suction temperature (°C):</label>
+<input
+  type="number"
+  id="suctionTemperature"
+  value="10"
+  step="0.1"
+/>
+  <label for="dischargePressure">Discharge pressure (bar absolute):</label>
+<input
+  type="number"
+  id="dischargePressure"
+   value="12"
+  min="0.1"
+  step="0.1"
+  />
+  <label for="dischargeTemperature">Discharge temperature (°C):</label>
+<input
+  type="number"
+  id="dischargeTemperature"
+  value="75"
+  step="0.1"
+/>
+  <label for="condenserTemperature">Condenser outlet temperature (°C):</label>
+<input
+  type="number"
+  id="condenserTemperature"
+  value="30"
+  step="0.1"
+/>
+  <button id="test" disabled>Calculate refrigerant enthalpy</button>
+  <div id="result" role="status">Waiting for engine...</div>
+<h3 id="chartTitle">R134a Pressure–Enthalpy Chart</h3>
+  <p>
+  🔴 Red — Compressor suction<br>
+  🟠 Orange — Compressor discharge<br>
+  🟢 Green — Condenser outlet<br>
+  🟣 Purple — Expansion valve outlet
+</p>
+<svg id="phChart" viewBox="0 0 700 430"
+     style="width:100%;background:#f5f8fc;border:1px solid #ccc;border-radius:8px;">
+</svg>
+  <div id="pointDetails" class="hint" aria-live="polite">Calculate, then select a coloured point to inspect its pressure and enthalpy.</div>
+  <section class="tools">
+    <label for="jobName">Job / site name (optional)</label>
+    <input id="jobName" type="text" placeholder="e.g. Plant room 1" maxlength="100">
+    <div class="actions">
+      <button id="saveJob" type="button" disabled>Save job on this device</button>
+      <button id="downloadReport" type="button" disabled>Download report (.txt)</button>
+    </div>
+    <p class="hint">Saved jobs stay in this browser on this device. They are not synced online.</p>
+    <div id="savedJobs"></div>
+  </section>
+  <p class="hint">Prototype for learning and testing. Verify refrigerant properties, operating conditions and equipment limits independently before engineering use.</p>
+  <script type="module">
+  import createCoolProp from "./coolprop.js";
+
+  let Module;
+
+  const loading = document.getElementById("loading");
+  const result = document.getElementById("result");
+  const button = document.getElementById("test");
+
+  try {
+    Module = await createCoolProp({
+      locateFile: (path) =>
+        path.endsWith(".wasm") ? "./coolprop.wasm" : path
+    });
+
+    loading.textContent = "CoolProp loaded successfully.";
+    button.disabled = false;
+
+    // Make the initialized engine available to the test button.
+    window.coolpropModule = Module;
+  } catch (error) {
+    loading.textContent = "CoolProp failed to load.";
+    result.textContent = String(error);
+    console.error(error);
+  }
+</script>  <script>
+    document.getElementById("test").addEventListener("click", function() {
+      window.latestCycle = null;
+      document.getElementById("saveJob").disabled = true;
+      document.getElementById("downloadReport").disabled = true;
+      try {
+         var refrigerant = document.getElementById("refrigerant").value;
+        document.getElementById("chartTitle").textContent = refrigerant + " Pressure–Enthalpy Chart";
+        var suctionPressure = Number(document.getElementById("suctionPressure").value);
+        var dischargePressure = Number(document.getElementById("dischargePressure").value);
+        var dischargeTemperature = Number(document.getElementById("dischargeTemperature").value);
+        var condenserTemperature = Number(document.getElementById("condenserTemperature").value);
+        var condenserTemperatureK = condenserTemperature + 273.15;
+        var dischargeTemperatureK = dischargeTemperature + 273.15;
+        var dischargePressurePa = dischargePressure * 100000;
+        var suctionTemperature = Number(document.getElementById("suctionTemperature").value);
+        var suctionTemperatureK = suctionTemperature + 273.15;
+        var suctionPressurePa = suctionPressure * 100000;
+        var hLiquid = window.coolpropModule.PropsSI(
+  "H", "P", dischargePressurePa, "Q", 0, refrigerant
+);
+        var hVapour = window.coolpropModule.PropsSI(
+  "H", "P", dischargePressurePa, "Q", 1, refrigerant
+);
+        var criticalPressureBar = window.coolpropModule.PropsSI("PCRIT", "", 0, "", 0, refrigerant) / 100000;
+       if (!Number.isFinite(criticalPressureBar) || criticalPressureBar <= 0) {
+  throw new Error("Could not calculate critical pressure for " + refrigerant);
+}
+        var maxSuctionPressure = refrigerant === "R134a" ? 10 : 25;
+        var maxDischargePressure = refrigerant === "R134a" ? 14 : 30;
+        var maxChartPressure = Math.min(criticalPressureBar * 0.95, 40);
+        var saturationPressuresBar = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, maxChartPressure].filter((p, i, arr) => p <= maxChartPressure && p < criticalPressureBar && arr.indexOf(p) === i);
+        if (!Number.isFinite(suctionPressure) || suctionPressure < 2 || suctionPressure > maxSuctionPressure) {
+  alert("Please enter a suction pressure between 2 and " + maxSuctionPressure + " bar absolute.");
+  return;
+}
+        if (
+  !Number.isFinite(dischargePressure) ||
+  dischargePressure <= suctionPressure ||
+  dischargePressure > maxDischargePressure
+) {
+  alert("Discharge pressure must be greater than suction pressure and no higher than " + maxDischargePressure + " bar absolute.");
+  return;
+}
+        var suctionSaturationK = window.coolpropModule.PropsSI(
+  "T", "P", suctionPressurePa, "Q", 1, refrigerant
+);
+        var suctionSuperheat = suctionTemperatureK - suctionSaturationK;
+        if (suctionTemperatureK <= suctionSaturationK + 0.1) {
+  alert(
+    "Suction temperature must be above saturation temperature (" +
+    (suctionSaturationK - 273.15).toFixed(1) +
+    "°C) at the entered pressure."
+  );
+  return;
+}
+        var hSuction = window.coolpropModule.PropsSI(
+  "H", "P", suctionPressurePa, "T", suctionTemperatureK, refrigerant
+);
+        console.log("Compressor suction enthalpy:", (hSuction / 1000).toFixed(2), "kJ/kg");
+        if (
+  !Number.isFinite(dischargeTemperature) ||
+  dischargeTemperature < -40 ||
+  dischargeTemperature > 150
+) {
+  alert("Please enter a discharge temperature between -40°C and 150°C.");
+  return;
+}
+        var hDischarge = window.coolpropModule.PropsSI(
+  "H", "P", dischargePressurePa, "T", dischargeTemperatureK, refrigerant
+);
+        var compressorWork = (hDischarge - hSuction) / 1000;
+        if (
+  !Number.isFinite(condenserTemperature) ||
+  condenserTemperature < -40 ||
+  condenserTemperature > 100
+) {
+  alert("Please enter a condenser outlet temperature between -40°C and 100°C.");
+  return;
+}
+        var condensingSaturationK = window.coolpropModule.PropsSI(
+  "T", "P", dischargePressurePa, "Q", 0, refrigerant
+);
+        var liquidSubcooling = condensingSaturationK - condenserTemperatureK;
+        if (liquidSubcooling < 0) {
+  alert("Warning: Condenser outlet is not subcooled liquid. Check the discharge pressure and condenser outlet temperature.");
+  return;
+}
+        var hCondenser = window.coolpropModule.PropsSI(
+  "H", "P", dischargePressurePa, "T", condenserTemperatureK, refrigerant
+);
+        var hExpansion = hCondenser;
+        var refrigerationEffect = (hSuction - hExpansion) / 1000;
+        var cop = compressorWork > 0 && refrigerationEffect > 0
+  ? refrigerationEffect / compressorWork
+  : NaN;
+        console.log("Condenser outlet enthalpy:", (hCondenser / 1000).toFixed(2), "kJ/kg");
+        console.log("Compressor discharge enthalpy:", (hDischarge / 1000).toFixed(2), "kJ/kg");
+
+var saturationData = saturationPressuresBar.map(function(bar) {
+  var p = bar * 100000;
+
+  var liquid = window.coolpropModule.PropsSI(
+    "H", "P", p, "Q", 0, refrigerant
+  );
+
+  var vapour = window.coolpropModule.PropsSI(
+    "H", "P", p, "Q", 1, refrigerant
+  );
+
+  return {
+    pressureBar: bar,
+    liquidKJ: liquid / 1000,
+    vapourKJ: vapour / 1000
+  };
+});
+
+
+        document.getElementById("result").textContent =
+          "CONDENSER OUTLET\n" +
+"Liquid subcooling: " + liquidSubcooling.toFixed(2) + " K\n" +
+          "Refrigeration effect: " + refrigerationEffect.toFixed(2) + " kJ/kg\n" +
+          "Compressor work: " + compressorWork.toFixed(2) + " kJ/kg\n" +
+          "COP: " + (Number.isFinite(cop) ? cop.toFixed(2) : "Invalid operating conditions") + "\n" +
+"\n" +
+         "COMPRESSOR SUCTION\n" +
+"Pressure: " + suctionPressure + " bar absolute\n" +
+"Temperature: " + suctionTemperature + " °C\n" +
+"Enthalpy: " + (hSuction / 1000).toFixed(2) + " kJ/kg\n" +
+"Suction superheat: " + suctionSuperheat.toFixed(2) + " K\n\n" +
+          "Refrigerant: " + refrigerant + "\n" +
+          "Discharge pressure: " + dischargePressure + " bar absolute\n" +
+          "Discharge temperature: " + dischargeTemperature + " °C\n" +
+          "Discharge enthalpy: " + (hDischarge / 1000).toFixed(2) + " kJ/kg\n" +
+          "Condenser outlet temperature: " + condenserTemperature + " °C\n" +
+          "Condenser outlet enthalpy: " + (hCondenser / 1000).toFixed(2) + " kJ/kg\n" +
+"Saturated liquid: " + (hLiquid / 1000).toFixed(2) + " kJ/kg\n" +
+"Saturated vapour: " + (hVapour / 1000).toFixed(2) + " kJ/kg"+
+"\n\n" + refrigerant + " SATURATION DATA\n" +
+"Pressure | Liquid | Vapour\n" +
+saturationData.map(function(point) {
+  return point.pressureBar + " bar | " +
+    point.liquidKJ.toFixed(2) + " | " +
+    point.vapourKJ.toFixed(2) + " kJ/kg";
+}).join("\n");
+const minEnthalpy = Math.floor(Math.min(hSuction / 1000, hDischarge / 1000, hCondenser / 1000, hExpansion / 1000, ...saturationData.map(p => p.liquidKJ), ...saturationData.map(p => p.vapourKJ)) / 50) * 50 - 50;
+const maxEnthalpy = Math.ceil(Math.max(hSuction / 1000, hDischarge / 1000, hCondenser / 1000, hExpansion / 1000, ...saturationData.map(p => p.liquidKJ), ...saturationData.map(p => p.vapourKJ)) / 50) * 50 + 50;   
+const chart = document.getElementById("phChart");
+        const chartX = enthalpy => 55 + ((enthalpy - minEnthalpy) / (maxEnthalpy - minEnthalpy)) * 595;
+        const chartY = pressure => 380 - (Math.log(pressure / 2) / Math.log(maxChartPressure / 2)) * 300;
+const liquidPoints = saturationData.map(p => ({
+  x: chartX(p.liquidKJ),
+  y: chartY(p.pressureBar)
+}));
+const vapourPoints = saturationData.map(p => ({
+  x: chartX(p.vapourKJ),
+  y: chartY(p.pressureBar)
+}));
+
+const makePath = points =>
+  points.map((p, i) =>
+    (i === 0 ? "M" : "L") + p.x + "," + p.y
+  ).join(" ");
+
+chart.innerHTML = `
+<line
+  x1="${chartX(hSuction / 1000)}"
+  y1="${chartY(suctionPressure)}"
+  x2="${chartX(hDischarge / 1000)}"
+  y2="${chartY(dischargePressure)}"
+  stroke="red"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
+<line
+  x1="${chartX(hDischarge / 1000)}"
+  y1="${chartY(dischargePressure)}"
+  x2="${chartX(hCondenser / 1000)}"
+  y2="${chartY(dischargePressure)}"
+  stroke="green"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
+<line
+  x1="${chartX(hCondenser / 1000)}"
+  y1="${chartY(dischargePressure)}"
+  x2="${chartX(hExpansion / 1000)}"
+  y2="${chartY(suctionPressure)}"
+  stroke="purple"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
+<line
+  x1="${chartX(hExpansion / 1000)}"
+  y1="${chartY(suctionPressure)}"
+  x2="${chartX(hSuction / 1000)}"
+  y2="${chartY(suctionPressure)}"
+  stroke="blue"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
+  <path d="${makePath(liquidPoints)}"
+        fill="none" stroke="blue" stroke-width="3"/>
+  <path d="${makePath(vapourPoints)}"
+        fill="none" stroke="orange" stroke-width="3"/>
+         ${saturationPressuresBar.filter(p => [2, 4, 6, 8, 10, 14, 20, 30, 40].includes(p)).map(p => {
+    const y = chartY(p);
+    return `
+      <line x1="55" y1="${y}" x2="650" y2="${y}"
+            stroke="#d1d5db" stroke-width="1"/>
+      <text x="38" y="${y + 4}" text-anchor="end"
+            font-size="10" fill="#374151">${p}</text>
+    `;
+  }).join("")}
+    ${Array.from({ length: 8 }, (_, i) => minEnthalpy + i * (maxEnthalpy - minEnthalpy) / 7).map(h => {
+    const x = chartX(h);
+    return `
+      <line x1="${x}" y1="80" x2="${x}" y2="380"
+            stroke="#d1d5db" stroke-width="1"/>
+      <text x="${x}" y="397" text-anchor="middle"
+            font-size="11" fill="#374151">${h.toFixed(0)}</text>
+    `;
+  }).join("")}
+  <text x="350" y="415" font-size="14">Enthalpy (kJ/kg)</text>
+  <text x="15" y="215" font-size="14"
+        transform="rotate(-90 15 215)">Pressure (bar)</text>
+        <circle
+  cx="${chartX(hSuction / 1000)}"
+ cy="${chartY(suctionPressure)}"
+  r="6"
+  fill="red"
+  stroke="white"
+  stroke-width="2"
+  data-point="Compressor suction"
+/>
+<circle
+  cx="${chartX(hDischarge / 1000)}"
+  cy="${chartY(dischargePressure)}"
+  r="6"
+  fill="orange"
+  stroke="white"
+  stroke-width="2"
+  data-point="Compressor discharge"
+/>
+<circle
+  cx="${chartX(hCondenser / 1000)}"
+  cy="${chartY(dischargePressure)}"
+  r="6"
+  fill="limegreen"
+  stroke="white"
+  stroke-width="2"
+  data-point="Condenser outlet"
+/>
+<circle
+  cx="${chartX(hExpansion / 1000)}"
+  cy="${chartY(suctionPressure)}"
+  r="6"
+  fill="purple"
+  stroke="white"
+  stroke-width="2"
+  data-point="Expansion valve outlet"
+/>
+`;
+        const state = {
+          refrigerant, suctionPressure, suctionTemperature, dischargePressure,
+          dischargeTemperature, condenserTemperature,
+          suctionEnthalpyKJ: hSuction / 1000,
+          dischargeEnthalpyKJ: hDischarge / 1000,
+          condenserEnthalpyKJ: hCondenser / 1000,
+          expansionEnthalpyKJ: hExpansion / 1000,
+          suctionSuperheatK: suctionSuperheat,
+          liquidSubcoolingK: liquidSubcooling,
+          refrigerationEffectKJ: refrigerationEffect,
+          compressorWorkKJ: compressorWork,
+          cop: Number.isFinite(cop) ? cop : null
+        };
+        window.latestCycle = state;
+        document.getElementById("saveJob").disabled = false;
+        document.getElementById("downloadReport").disabled = false;
+        document.getElementById("pointDetails").textContent = "Select a coloured point to inspect its values.";
+        const pointValues = {
+          "Compressor suction": [suctionPressure, hSuction / 1000],
+          "Compressor discharge": [dischargePressure, hDischarge / 1000],
+          "Condenser outlet": [dischargePressure, hCondenser / 1000],
+          "Expansion valve outlet": [suctionPressure, hExpansion / 1000]
+        };
+        chart.querySelectorAll("circle[data-point]").forEach(circle => {
+          const name = circle.getAttribute("data-point");
+          const [pressure, enthalpy] = pointValues[name];
+          circle.setAttribute("tabindex", "0");
+          circle.setAttribute("role", "button");
+          circle.setAttribute("aria-label", name + ": " + pressure + " bar, " + enthalpy.toFixed(2) + " kJ/kg");
+          const show = () => {
+            document.getElementById("pointDetails").textContent =
+              name + " — " + pressure.toFixed(2) + " bar absolute | " + enthalpy.toFixed(2) + " kJ/kg";
+          };
+          circle.addEventListener("click", show);
+          circle.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") show(); });
+        });
+      } catch (error) {
+        document.getElementById("result").textContent =
+          "Calculation error: " + error.message;
+      }
+    });
+
+    function makeReport(cycle, name) {
+      const fmt = (v, unit) => Number(v).toFixed(2) + " " + unit;
+      return [
+        "REFRIGERANT CYCLE PRO — JOB REPORT",
+        "Job: " + (name || "Unnamed job"),
+        "Created: " + new Date().toLocaleString(),
+        "Refrigerant: " + cycle.refrigerant,
+        "",
+        "COMPRESSOR SUCTION",
+        "Pressure: " + fmt(cycle.suctionPressure, "bar absolute"),
+        "Temperature: " + fmt(cycle.suctionTemperature, "°C"),
+        "Enthalpy: " + fmt(cycle.suctionEnthalpyKJ, "kJ/kg"),
+        "Superheat: " + fmt(cycle.suctionSuperheatK, "K"),
+        "",
+        "COMPRESSOR DISCHARGE",
+        "Pressure: " + fmt(cycle.dischargePressure, "bar absolute"),
+        "Temperature: " + fmt(cycle.dischargeTemperature, "°C"),
+        "Enthalpy: " + fmt(cycle.dischargeEnthalpyKJ, "kJ/kg"),
+        "",
+        "CONDENSER OUTLET",
+        "Temperature: " + fmt(cycle.condenserTemperature, "°C"),
+        "Enthalpy: " + fmt(cycle.condenserEnthalpyKJ, "kJ/kg"),
+        "Subcooling: " + fmt(cycle.liquidSubcoolingK, "K"),
+        "",
+        "EXPANSION OUTLET",
+        "Enthalpy: " + fmt(cycle.expansionEnthalpyKJ, "kJ/kg"),
+        "",
+        "CYCLE PERFORMANCE",
+        "Refrigeration effect: " + fmt(cycle.refrigerationEffectKJ, "kJ/kg"),
+        "Compressor work: " + fmt(cycle.compressorWorkKJ, "kJ/kg"),
+        "Idealised COP (from measured input states): " + (cycle.cop === null ? "N/A" : cycle.cop.toFixed(2)),
+        "",
+        "Prototype calculation; verify before engineering use."
+      ].join("\n");
+    }
+    function downloadText(text, filename) {
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    const jobsKey = "refrigerantCycleProJobsV1";
+    function readJobs() {
+      try { return JSON.parse(localStorage.getItem(jobsKey) || "[]"); }
+      catch { return []; }
+    }
+    function renderJobs() {
+      const holder = document.getElementById("savedJobs");
+      holder.replaceChildren();
+      const jobs = readJobs();
+      if (!jobs.length) { holder.textContent = "No saved jobs yet."; return; }
+      const heading = document.createElement("h3");
+      heading.textContent = "Saved jobs (" + jobs.length + ")";
+      holder.appendChild(heading);
+      jobs.forEach(job => {
+        const row = document.createElement("div");
+        row.className = "saved-job";
+        const label = document.createElement("strong");
+        label.textContent = job.name + " — " + job.cycle.refrigerant + " (" + new Date(job.created).toLocaleString() + ")";
+        row.appendChild(label);
+        const download = document.createElement("button");
+        download.textContent = "Download report";
+        download.addEventListener("click", () => downloadText(makeReport(job.cycle, job.name), "refrigerant-job-" + job.id + ".txt"));
+        const remove = document.createElement("button");
+        remove.textContent = "Delete";
+        remove.addEventListener("click", () => {
+          if (!confirm("Delete this saved job from this browser?")) return;
+          localStorage.setItem(jobsKey, JSON.stringify(readJobs().filter(x => x.id !== job.id)));
+          renderJobs();
+        });
+        row.appendChild(document.createElement("br"));
+        row.append(download, remove);
+        holder.appendChild(row);
+      });
+    }
+    document.getElementById("downloadReport").addEventListener("click", () => {
+      if (!window.latestCycle) return;
+      downloadText(makeReport(window.latestCycle, document.getElementById("jobName").value.trim()), "refrigerant-cycle-report.txt");
+    });
+    document.getElementById("saveJob").addEventListener("click", () => {
+      if (!window.latestCycle) return;
+      const name = document.getElementById("jobName").value.trim() || "Unnamed job";
+      const job = { id: Date.now(), name, created: new Date().toISOString(), cycle: window.latestCycle };
+      try {
+        const jobs = readJobs();
+        jobs.unshift(job);
+        localStorage.setItem(jobsKey, JSON.stringify(jobs));
+        renderJobs();
+        alert("Job saved in this browser.");
+      } catch (e) { alert("Could not save job: " + e.message); }
+    });
+    renderJobs();
+  </script>
+</body>
+</html>
