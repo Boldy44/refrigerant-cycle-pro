@@ -276,7 +276,7 @@ saturationData.map(function(point) {
 const minEnthalpy = Math.floor(Math.min(hSuction / 1000, hDischarge / 1000, hCondenser / 1000, hExpansion / 1000, ...saturationData.map(p => p.liquidKJ), ...saturationData.map(p => p.vapourKJ)) / 50) * 50 - 50;
 const maxEnthalpy = Math.ceil(Math.max(hSuction / 1000, hDischarge / 1000, hCondenser / 1000, hExpansion / 1000, ...saturationData.map(p => p.liquidKJ), ...saturationData.map(p => p.vapourKJ)) / 50) * 50 + 50;   
 const chart = document.getElementById("phChart");
-        const chartX = enthalpy => 55 + ((enthalpy - minEnthalpy) / (maxEnthalpy - minEnthalpy)) * 297.5;
+        const chartX = enthalpy => 55 + ((enthalpy - minEnthalpy) / (maxEnthalpy - minEnthalpy)) * 245;
         const chartY = pressure => 380 - (Math.log(pressure / 2) / Math.log(maxDischargePressure / 2)) * 300;
 const liquidPoints = saturationData.map(p => ({
   x: chartX(p.liquidKJ),
