@@ -137,7 +137,7 @@ button {
       <button id="backupJobs" type="button">Backup all saved jobs (.json)</button>
       <button id="restoreJobs" type="button">Restore jobs from backup</button>
     </div>
-    <input id="restoreJobsFile" type="file" accept=".json,application/json" hidden>
+    <input id="restoreJobsFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
     <p id="backupStatus" class="hint" role="status" aria-live="polite"></p>
     <p class="hint">Saved jobs stay in this browser on this device. They are not synced online. A backup (.json) can be restored into another installation. Reports (.txt) cannot be imported as job backups.</p>
     <div id="savedJobs"></div>
