@@ -300,6 +300,7 @@ button {
         var cop = compressorWork > 0 && refrigerationEffect > 0
   ? refrigerationEffect / compressorWork
   : NaN;
+        var pressureRatio = dischargePressure / suctionPressure;
         console.log("Condenser outlet enthalpy:", (hCondenser / 1000).toFixed(2), "kJ/kg");
         console.log("Compressor discharge enthalpy:", (hDischarge / 1000).toFixed(2), "kJ/kg");
 
@@ -331,6 +332,7 @@ if (saturationData.length < 4) throw new Error("Could not calculate enough satur
           "Refrigeration effect: " + refrigerationEffect.toFixed(2) + " kJ/kg\n" +
           "Compressor work: " + compressorWork.toFixed(2) + " kJ/kg\n" +
           "COP: " + (Number.isFinite(cop) ? cop.toFixed(2) : "Invalid operating conditions") + "\n" +
+          "Compressor pressure ratio: " + pressureRatio.toFixed(2) + "\n" +
 "\n" +
          "COMPRESSOR SUCTION\n" +
 "Pressure: " + suctionPressure + " bar absolute\n" +
