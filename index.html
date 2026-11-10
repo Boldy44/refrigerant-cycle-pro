@@ -494,21 +494,26 @@ chart.innerHTML = `
         document.getElementById("saveJob").disabled = false;
         document.getElementById("downloadReport").disabled = false;
         document.getElementById("pointDetails").textContent = "Select a coloured point to inspect its values.";
+        const expansionTemperatureK = window.coolpropModule.PropsSI(
+  "T", "P", suctionPressurePa, "H", hExpansion, refrigerant
+);
         const pointValues = {
-          "Compressor suction": [suctionPressure, hSuction / 1000],
-          "Compressor discharge": [dischargePressure, hDischarge / 1000],
-          "Condenser outlet": [dischargePressure, hCondenser / 1000],
-          "Expansion valve outlet": [suctionPressure, hExpansion / 1000]
+          "Compressor suction": [suctionPressure, hSuction / 1000, suctionTemperatureK],
+"Compressor discharge": [dischargePressure, hDischarge / 1000, dischargeTemperatureK],
+"Condenser outlet": [dischargePressure, hCondenser / 1000, condenserTemperatureK],
+"Expansion valve outlet": [suctionPressure, hExpansion / 1000, expansionTemperatureK]
         };
         chart.querySelectorAll("circle[data-point]").forEach(circle => {
           const name = circle.getAttribute("data-point");
-          const [pressure, enthalpy] = pointValues[name];
+          const [pressure, enthalpy, temperatureK] = pointValues[name];
           circle.setAttribute("tabindex", "0");
           circle.setAttribute("role", "button");
           circle.setAttribute("aria-label", name + ": " + pressure + " bar, " + enthalpy.toFixed(2) + " kJ/kg");
           const show = () => {
             document.getElementById("pointDetails").textContent =
-              name + " — " + pressure.toFixed(2) + " bar absolute | " + enthalpy.toFixed(2) + " kJ/kg";
+  name + " — " + pressure.toFixed(2) + " bar absolute | " +
+  (temperatureK - 273.15).toFixed(1) + " °C | " +
+  enthalpy.toFixed(2) + " kJ/kg";
           };
           circle.addEventListener("click", show);
           circle.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") show(); });
