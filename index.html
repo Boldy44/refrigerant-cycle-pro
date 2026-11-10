@@ -133,7 +133,13 @@ button {
       <button id="saveJob" type="button" disabled>Save job on this device</button>
       <button id="downloadReport" type="button" disabled>Download report (.txt)</button>
     </div>
-    <p class="hint">Saved jobs stay in this browser on this device. They are not synced online.</p>
+    <div class="actions">
+      <button id="backupJobs" type="button">Backup all saved jobs (.json)</button>
+      <button id="restoreJobs" type="button">Restore jobs from backup</button>
+    </div>
+    <input id="restoreJobsFile" type="file" accept=".json,application/json" hidden>
+    <p id="backupStatus" class="hint" role="status" aria-live="polite"></p>
+    <p class="hint">Saved jobs stay in this browser on this device. They are not synced online. A backup (.json) can be restored into another installation. Reports (.txt) cannot be imported as job backups.</p>
     <div id="savedJobs"></div>
   </section>
   <p class="hint">Prototype for learning and testing. Verify refrigerant properties, operating conditions and equipment limits independently before engineering use.</p>
@@ -561,6 +567,51 @@ chart.innerHTML = `
       try { return JSON.parse(localStorage.getItem(jobsKey) || "[]"); }
       catch { return []; }
     }
+    function validJob(job) {
+      return job && typeof job === "object" &&
+        (typeof job.id === "number" || typeof job.id === "string") &&
+        typeof job.name === "string" && typeof job.created === "string" &&
+        job.cycle && typeof job.cycle === "object" &&
+        typeof job.cycle.refrigerant === "string" &&
+        ["suctionPressure", "dischargePressure", "suctionTemperature", "dischargeTemperature", "condenserTemperature"].every(k =>
+          typeof job.cycle[k] === "number" && Number.isFinite(job.cycle[k]));
+    }
+    document.getElementById("backupJobs").addEventListener("click", () => {
+      const jobs = readJobs();
+      if (!jobs.length) { alert("There are no saved jobs to back up on this installation."); return; }
+      const backup = { format: "RefrigerantCycleProJobs", version: 1, exportedAt: new Date().toISOString(), jobs };
+      downloadText(JSON.stringify(backup, null, 2), "refrigerant-cycle-jobs-backup.json");
+      document.getElementById("backupStatus").textContent = "Backup prepared for download: " + jobs.length + " job(s). Save the JSON file in Files.";
+    });
+    document.getElementById("restoreJobs").addEventListener("click", () => document.getElementById("restoreJobsFile").click());
+    document.getElementById("restoreJobsFile").addEventListener("change", async (event) => {
+      const input = event.currentTarget;
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const status = document.getElementById("backupStatus");
+      try {
+        if (file.size > 5 * 1024 * 1024) throw new Error("Backup file is too large (maximum 5 MB).");
+        const data = JSON.parse(await file.text());
+        if (!data || data.format !== "RefrigerantCycleProJobs" || data.version !== 1 ||
+            !Array.isArray(data.jobs) || data.jobs.length > 10000 || !data.jobs.every(validJob)) {
+          throw new Error("This is not a valid Refrigerant Cycle Pro jobs backup (.json).");
+        }
+        const existing = readJobs();
+        if (!Array.isArray(existing)) throw new Error("Existing jobs could not be read safely.");
+        const seen = new Set(existing.map(j => String(j.id)));
+        const additions = data.jobs.filter(j => !seen.has(String(j.id)));
+        if (!additions.length) { status.textContent = "No new jobs to restore; existing jobs were left unchanged."; return; }
+        if (!confirm("Restore " + additions.length + " job(s)? Existing saved jobs will be kept.")) return;
+        const merged = [...additions, ...existing];
+        localStorage.setItem(jobsKey, JSON.stringify(merged));
+        renderJobs();
+        status.textContent = "Restored " + additions.length + " job(s). Existing jobs were kept.";
+        alert("Restored " + additions.length + " job(s) successfully.");
+      } catch (error) {
+        status.textContent = "Restore failed: " + error.message;
+        alert(status.textContent + " Your saved jobs have not been intentionally changed.");
+      } finally { input.value = ""; }
+    });
     function renderJobs() {
       const holder = document.getElementById("savedJobs");
       holder.replaceChildren();
