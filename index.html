@@ -115,6 +115,10 @@ button {
 />
   <button id="test" disabled>Calculate refrigerant enthalpy</button>
   <div id="result" role="status">Waiting for engine...</div>
+  <details id="saturationDetails" hidden>
+  <summary>Show / Hide Saturation Data</summary>
+  <pre id="saturationDataDisplay"></pre>
+</details>
 <h3 id="chartTitle">R134a Pressure–Enthalpy Chart</h3>
   <p>
   🔴 Red — Compressor suction<br>
@@ -341,13 +345,17 @@ if (saturationData.length < 4) throw new Error("Could not calculate enough satur
           "Condenser outlet enthalpy: " + (hCondenser / 1000).toFixed(2) + " kJ/kg\n" +
 "Saturated liquid: " + (hLiquid / 1000).toFixed(2) + " kJ/kg\n" +
 "Saturated vapour: " + (hVapour / 1000).toFixed(2) + " kJ/kg"+
-"\n\n" + refrigerant + " SATURATION DATA\n" +
-"Pressure | Liquid | Vapour\n" +
-saturationData.map(function(point) {
-  return point.pressureBar.toFixed(2) + " bar | " +
-    point.liquidKJ.toFixed(2) + " | " +
-    point.vapourKJ.toFixed(2) + " kJ/kg";
-}).join("\n");
+"";
+        const saturationText = refrigerant + " SATURATION DATA\n" +
+  "Pressure | Liquid | Vapour\n" +
+  saturationData.map(function(point) {
+    return point.pressureBar.toFixed(2) + " bar | " +
+      point.liquidKJ.toFixed(2) + " | " +
+      point.vapourKJ.toFixed(2) + " kJ/kg";
+  }).join("\n");
+
+document.getElementById("saturationDataDisplay").textContent = saturationText;
+document.getElementById("saturationDetails").hidden = false;
 const minEnthalpy = Math.floor(Math.min(hSuction / 1000, hDischarge / 1000, hCondenser / 1000, hExpansion / 1000, ...saturationData.map(p => p.liquidKJ), ...saturationData.map(p => p.vapourKJ)) / 50) * 50 - 50;
 const maxEnthalpy = Math.ceil(Math.max(hSuction / 1000, hDischarge / 1000, hCondenser / 1000, hExpansion / 1000, ...saturationData.map(p => p.liquidKJ), ...saturationData.map(p => p.vapourKJ)) / 50) * 50 + 50;   
 const chart = document.getElementById("phChart");
