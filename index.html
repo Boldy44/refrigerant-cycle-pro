@@ -387,7 +387,7 @@ if (saturationData.length < 4) throw new Error("Could not calculate enough satur
 "\n" +
          "COMPRESSOR SUCTION\n" +
 "Pressure: " + suctionPressure + " bar absolute\n" +
-"Temperature: " + suctionTemperature + " °C\n" +
+"Temperature: " + suctionTemperature .toFixed(2)+ " °C\n" +
 "Enthalpy: " + (hSuction / 1000).toFixed(2) + " kJ/kg\n" +
 "Suction superheat: " + suctionSuperheat.toFixed(2) + " K\n\n" +
           "Refrigerant: " + refrigerant + "\n" +
