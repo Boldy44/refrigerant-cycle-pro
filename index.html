@@ -209,14 +209,60 @@ button {
         var dischargePressure = toBarAbsolute(Number(document.getElementById("dischargePressure").value), pressureUnitEl.value, pressureTypeEl.value);
         var dischargeTemperature = Number(document.getElementById("dischargeTemperature").value);
         var condenserTemperature = Number(document.getElementById("condenserTemperature").value);
-        for (const id of ["suctionPressure","dischargePressure","suctionTemperature","dischargeTemperature","condenserTemperature"]) {
-          if (document.getElementById(id).value.trim()==="") throw new Error("Please fill in all pressure and temperature fields.");
-        }
+       const missingReadings = [
+  "suctionPressure",
+  "dischargePressure",
+  "suctionTemperature",
+  "dischargeTemperature",
+  "condenserTemperature"
+].filter(id => document.getElementById(id).value.trim() === "");
+       if (missingReadings.length > 0) {
+  const confirmed = confirm(
+    "Missing readings: " + missingReadings.join(", ") +
+    "\n\nWould you like to estimate the missing readings?"
+  );
+  if (!confirmed) return;
+}
+
+        const estimatedReadings = [];
+
+if (missingReadings.length > 0) {
+  if (missingReadings.includes("suctionPressure") ||
+      missingReadings.includes("dischargePressure")) {
+    throw new Error(
+      "Automatic pressure estimation is not yet supported. " +
+      "Please enter both pressure readings."
+    );
+  }
+
+  if (missingReadings.includes("suctionTemperature")) {
+    const saturationK = window.coolpropModule.PropsSI(
+      "T", "P", suctionPressure * 100000, "Q", 1, refrigerant
+    );
+    suctionTemperature = saturationK - 273.15 + 5;
+    estimatedReadings.push("Suction temperature (5 K assumed superheat)");
+  }
+
+  if (missingReadings.includes("condenserTemperature")) {
+    const saturationK = window.coolpropModule.PropsSI(
+      "T", "P", dischargePressure * 100000, "Q", 0, refrigerant
+    );
+    condenserTemperature = saturationK - 273.15 - 5;
+    estimatedReadings.push("Condenser outlet temperature (5 K assumed subcooling)");
+  }
+
+  if (missingReadings.includes("dischargeTemperature")) {
+    throw new Error(
+      "Discharge temperature estimation is not yet supported. " +
+      "Please enter a discharge temperature."
+    );
+  }
+}
         if (!Number.isFinite(suctionPressure) || !Number.isFinite(dischargePressure) || suctionPressure<=0 || dischargePressure<=0) throw new Error("Both pressures must be above zero bar absolute.");
         var condenserTemperatureK = condenserTemperature + 273.15;
         var dischargeTemperatureK = dischargeTemperature + 273.15;
         var dischargePressurePa = dischargePressure * 100000;
-        var suctionTemperature = Number(document.getElementById("suctionTemperature").value);
+        
         var suctionTemperatureK = suctionTemperature + 273.15;
         var suctionPressurePa = suctionPressure * 100000;
         var hLiquid = window.coolpropModule.PropsSI(
@@ -327,6 +373,11 @@ if (saturationData.length < 4) throw new Error("Could not calculate enough satur
 
 
         document.getElementById("result").textContent =
+         (estimatedReadings.length > 0
+  ? "⚠ ESTIMATED CYCLE — NOT MEASURED\n" +
+    "Assumed readings: " + estimatedReadings.join(", ") + "\n" +
+    "For indicative use only. Verify on site.\n\n"
+  : "") +
           "CONDENSER OUTLET\n" +
 "Liquid subcooling: " + liquidSubcooling.toFixed(2) + " K\n" +
           "Refrigeration effect: " + refrigerationEffect.toFixed(2) + " kJ/kg\n" +
