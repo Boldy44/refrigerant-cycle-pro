@@ -535,6 +535,7 @@ chart.innerHTML = `
 />
 `;
         const state = {
+         estimatedReadings: [...estimatedReadings],
           refrigerant, suctionPressure, suctionTemperature, dischargePressure,
           inputPressureUnit:pressureUnitEl.value, inputPressureType:pressureTypeEl.value,
           suctionPressureEntered:Number(document.getElementById("suctionPressure").value),
@@ -593,6 +594,9 @@ chart.innerHTML = `
         "Refrigerant: " + cycle.refrigerant,
         "Pressure input: " + (cycle.inputPressureUnit || "bar") + " " + (cycle.inputPressureType || "absolute"),
         "Gauge conversion assumes standard atmospheric pressure (1.01325 bar).",
+       cycle.estimatedReadings && cycle.estimatedReadings.length
+  ? "WARNING: ESTIMATED CYCLE - NOT MEASURED\nAssumed readings: " + cycle.estimatedReadings.join(", ") + "\nIndicative use only. Verify on site."
+  : "Cycle based on entered readings.",
         "",
         "COMPRESSOR SUCTION",
         "Pressure: " + fmt(cycle.suctionPressure, "bar absolute"),
