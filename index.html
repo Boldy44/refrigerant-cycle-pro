@@ -448,6 +448,13 @@ chart.innerHTML = `
   stroke-width="2"
   data-point="Compressor suction"
 />
+<text
+  x="${chartX(hSuction / 1000) + 10}"
+  y="${chartY(suctionPressure) - 10}"
+  font-size="11"
+  fill="#b91c1c"
+  pointer-events="none"
+>${suctionTemperature.toFixed(1)}°C</text>
 <circle
   cx="${chartX(hDischarge / 1000)}"
   cy="${chartY(dischargePressure)}"
