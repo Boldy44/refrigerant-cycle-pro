@@ -588,7 +588,7 @@ chart.innerHTML = `
         });
       } catch (error) {
         document.getElementById("result").textContent =
-          "Calculation error: " + error.message;
+          "Calculation error: " + (error.stack || error.message);
       }
     });
 
