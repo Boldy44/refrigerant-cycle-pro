@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Refrigerant Cycle Pro — Validation Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    button { padding: 12px; margin-top: 12px; }
+    #result { padding: 12px; background: #eef3fa; margin-top: 15px; white-space: pre-wrap; }
+    label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input[type="number"] {
+  display: block;
+  width: 100%;
+  max-width: 350px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  font-size: 16px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+
+button {
+  display: block;
+  padding: 12px 18px;
+  margin-top: 15px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+    body { max-width: 900px; background:#f8fafc; color:#172334; line-height:1.5; }
+    h1 { margin-bottom: 0; color:#103d65; }
+    .subtitle { margin-top:4px; color:#52657b; }
+    select, input[type="text"] { width:100%; max-width:350px; box-sizing:border-box; padding:12px; border:1px solid #9daec0; border-radius:6px; font-size:16px; background:white; }
+    #result { border-radius:8px; overflow-wrap:anywhere; }
+    #phChart { display:block; margin-top:12px; }
+    .chart-controls { display:flex; flex-wrap:wrap; gap:12px 22px; padding:12px 14px; background:white; border:1px solid #d7e1ed; border-radius:8px; }
+    .chart-controls label { display:inline-flex; align-items:center; gap:8px; margin:0; font-weight:normal; cursor:pointer; }
+    .chart-controls input { width:18px; height:18px; accent-color:#0f5487; }
+
+    .validation-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .validation-table th, .validation-table td { padding:7px 9px; border-bottom:1px solid #dbe4ed; text-align:left; vertical-align:top; }
+    .validation-table th { background:#e7f0fa; }
+    .validation-table td:last-child { font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+    .validation-note { padding:10px; border-left:4px solid #d97706; background:#fff8e9; margin:12px 0; }
+    .validation-status { margin:8px 0; }
+    .tools { background:white; border:1px solid #d7e1ed; border-radius:10px; padding:16px; margin-top:20px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .actions button { background:#0f5487; color:white; border:0; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .hint { color:#52657b; font-size:14px; }
+    #savedJobs button { margin:5px 8px 5px 0; padding:7px; font-size:14px; }
+    .saved-job { border-top:1px solid #e2e8f0; padding:10px 0; }
+    #phChart circle[data-point] { cursor:pointer; }
+    .saturation-table-wrap { overflow-x:auto; margin:12px 0; }
+    .saturation-table { border-collapse:collapse; width:100%; min-width:580px; font-size:14px; font-variant-numeric:tabular-nums; }
+    .saturation-table th, .saturation-table td { padding:7px 10px; border-bottom:1px solid #dbe4ed; text-align:right; white-space:nowrap; }
+    .saturation-table thead th { background:#e7f0fa; color:#163b5b; position:sticky; top:0; }
+    .saturation-table tbody tr:nth-child(even) { background:#f1f5f9; }
+    .saturation-table .critical-row { background:#fff0d7!important; font-weight:bold; }
+    .saturation-note { font-size:13px; color:#52657b; }
+    @media(max-width:600px) { body {padding:12px;} h1 {font-size:1.65rem;} .tools {padding:12px;} .actions button {width:100%; margin:4px 0;} }
+    input:focus, select:focus, button:focus {outline:2px solid #1976ba;outline-offset:2px;}
+  </style>
+</head>
+<body>
+  <div style="background:#fff3cd; color:#664d03; padding:15px; border:2px solid #ffcc00; border-radius:8px; margin-bottom:20px;">
+  <strong>⚠️ REFRIGERANT CYCLE PRO — BETA TEST VERSION</strong>
+  <p>This app is under development and has not been fully validated.</p>
+  <p>Calculations and estimated readings are for testing and indicative purposes only.</p>
+  <p><strong>NOT FOR ENGINEERING DECISIONS, SAFETY CHECKS OR REFRIGERANT CHARGING.</strong></p>
+  <p>Always verify results using approved equipment and manufacturer data.</p>
+</div>
+  <h1>Refrigerant Cycle Pro</h1>
+  <p class="subtitle">Refrigeration cycle calculator and interactive pressure–enthalpy chart — critical dome, temperature and entropy contour display controls test</p>
+  <p id="loading">Loading CoolProp...</p>
+  <label for="refrigerant">Select refrigerant:</label>
+<select id="refrigerant">
+  <option value="R134a">R134a</option>
+  <option value="R32">R32</option>
+  <option value="R410A">R410A</option>
+  <option value="R290">R290</option>
+  <option value="R600a">R600a</option>
+</select>
+  <div class="tools" style="margin-top:14px">
+    <label for="pressureUnit">Pressure units</label>
+    <select id="pressureUnit"><option value="bar">bar</option><option value="kPa">kPa</option><option value="psi">psi</option></select>
+    <label for="pressureType">Pressure reference</label>
+    <select id="pressureType"><option value="absolute">Absolute</option><option value="gauge">Gauge</option></select>
+    <p class="hint">Gauge readings are converted using 1.01325 bar atmospheric pressure (standard atmosphere). Actual local atmospheric pressure may differ.</p>
+  </div>
+  <label for="suctionPressure" id="suctionPressureLabel">Suction pressure (bar absolute):</label>
+<input
+  type="number"
+  id="suctionPressure"
+  value="2"
+  min="0.1"
+  step="0.1"
+/>
+  <label for="suctionTemperature">Suction temperature (°C):</label>
+<input
+  type="number"
+  id="suctionTemperature"
+  value="10"
+  step="0.1"
+/>
+  <label for="dischargePressure" id="dischargePressureLabel">Discharge pressure (bar absolute):</label>
+<input
+  type="number"
+  id="dischargePressure"
+   value="12"
+  min="0.1"
+  step="0.1"
+  />
+  <label for="dischargeTemperature">Discharge temperature (°C):</label>
+<input
+  type="number"
+  id="dischargeTemperature"
+  value="75"
+  step="0.1"
+/>
+  <label for="condenserTemperature">Condenser outlet temperature (°C):</label>
+<input
+  type="number"
+  id="condenserTemperature"
+  value="30"
+  step="0.1"
+/>
+  <button id="test" disabled>Calculate refrigerant enthalpy</button>
+  <div id="result" role="status">Waiting for engine...</div>
+  <details id="validationDetails" class="tools" hidden>
+    <summary><strong>Calculation validation panel (test version)</strong></summary>
+    <p class="validation-note"><strong>Internal diagnostics only.</strong> These readings come from the same CoolProp engine as the chart. They are <strong>not</strong> an independent REFPROP comparison or certification for engineering use.</p>
+    <div id="validationContent" aria-live="polite"></div>
+  </details>
+  <details id="saturationDetails" hidden>
+  <summary>Show / Hide Saturation Data</summary>
+  <div id="saturationDataDisplay" class="saturation-table-wrap"></div>
+</details>
+<h3 id="chartTitle">R134a Pressure–Enthalpy Chart</h3>
+  <p>
+  🔴 Red — Compressor suction<br>
+  🟠 Orange — Compressor discharge<br>
+  🟢 Green — Condenser outlet<br>
+  🟣 Purple — Expansion valve outlet
+</p>
+<div class="chart-controls" role="group" aria-label="Chart display controls">
+  <label><input type="checkbox" id="showDome" checked> Saturation dome</label>
+  <label><input type="checkbox" id="showTemperature" checked> Temperature lines (°C)</label>
+  <label><input type="checkbox" id="showEntropy" checked> Entropy lines (kJ/kg·K)</label>
+  <label><input type="checkbox" id="showQuality" checked> Vapour quality lines (10–90%)</label>
+</div>
+<svg id="phChart" viewBox="0 0 700 430"
+     style="width:100%;background:#f5f8fc;border:1px solid #ccc;border-radius:8px;">
+</svg>
+  <p class="hint">Dashed teal: constant temperature (°C). Dashed purple: constant entropy, s (kJ/kg·K). Dotted gold: vapour quality (dryness fraction) within the saturation dome. Contours are indicative and require independent validation.</p>
+  <div id="pointDetails" class="hint" aria-live="polite">Calculate, then select a coloured point to inspect its pressure and enthalpy.</div>
+  <section class="tools">
+    <label for="jobName">Job / site name (optional)</label>
+    <input id="jobName" type="text" placeholder="e.g. Plant room 1" maxlength="100">
+    <div class="actions">
+      <button id="saveJob" type="button" disabled>Save job on this device</button>
+      <button id="downloadReport" type="button" disabled>Download report (.txt)</button>
+    </div>
+    <div class="actions">
+      <button id="backupJobs" type="button">Backup all saved jobs (.json)</button>
+      <button id="restoreJobs" type="button">Restore jobs from backup</button>
+    </div>
+    <input id="restoreJobsFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
+    <p id="backupStatus" class="hint" role="status" aria-live="polite"></p>
+    <p class="hint">Saved jobs stay in this browser on this device. They are not synced online. A backup (.json) can be restored into another installation. Reports (.txt) cannot be imported as job backups.</p>
+    <div id="savedJobs"></div>
+  </section>
+  <p class="hint">Prototype for learning and testing. Verify refrigerant properties, operating conditions and equipment limits independently before engineering use.</p>
+  <script type="module">
+  import createCoolProp from "./coolprop.js";
+
+  let Module;
+
+  const loading = document.getElementById("loading");
+  const result = document.getElementById("result");
+  const button = document.getElementById("test");
+
+  try {
+    Module = await createCoolProp({
+      locateFile: (path) =>
+        path.endsWith(".wasm") ? "./coolprop.wasm" : path
+    });
+
+    loading.textContent = "CoolProp loaded successfully.";
+    button.disabled = false;
+
+    // Make the initialized engine available to the test button.
+    window.coolpropModule = Module;
+  } catch (error) {
+    loading.textContent = "CoolProp failed to load.";
+    result.textContent = String(error);
+    console.error(error);
+  }
+</script>  <script>
+    for (const id of ["showDome", "showTemperature", "showEntropy", "showQuality"]) {
+      document.getElementById(id).addEventListener("change", () => {
+        const svg = document.getElementById("phChart");
+        for (const [groupId, controlId] of [["chart-dome","showDome"],["chart-temperature","showTemperature"],["chart-entropy","showEntropy"],["chart-quality","showQuality"]]) {
+          const group = svg.querySelector("#" + groupId);
+          if (group) group.style.display = document.getElementById(controlId).checked ? "" : "none";
+        }
+      });
+    }
+    const atmosphericBar = 1.01325;
+    const pressureFactors = {bar:1, kPa:0.01, psi:0.0689475729};
+    const pressureUnitEl = document.getElementById("pressureUnit");
+    const pressureTypeEl = document.getElementById("pressureType");
+    const pressureFields = [document.getElementById("suctionPressure"),document.getElementById("dischargePressure")];
+    let previousUnit = pressureUnitEl.value, previousType = pressureTypeEl.value;
+    function toBarAbsolute(value, unit, type) {return value*pressureFactors[unit]+(type === "gauge" ? atmosphericBar:0);}
+    function fromBarAbsolute(value, unit, type) {return (value-(type === "gauge" ? atmosphericBar:0))/pressureFactors[unit];}
+    function updatePressureLabels() {
+      document.getElementById("suctionPressureLabel").textContent = `Suction pressure (${pressureUnitEl.value} ${pressureTypeEl.value}):`;
+      document.getElementById("dischargePressureLabel").textContent = `Discharge pressure (${pressureUnitEl.value} ${pressureTypeEl.value}):`;
+    }
+    function changePressureDisplay() {
+      for (const field of pressureFields) {
+        if (field.value.trim() !== "" && Number.isFinite(Number(field.value))) {
+          const bar = toBarAbsolute(Number(field.value), previousUnit, previousType);
+          field.value = Number(fromBarAbsolute(bar, pressureUnitEl.value, pressureTypeEl.value).toFixed(3));
+        }
+      }
+      previousUnit=pressureUnitEl.value;previousType=pressureTypeEl.value;
+      updatePressureLabels();
+    }
+    pressureUnitEl.addEventListener("change",changePressureDisplay);
+    pressureTypeEl.addEventListener("change",changePressureDisplay);
+    updatePressureLabels();
+    document.getElementById("test").addEventListener("click", function() {
+      window.latestCycle = null;
+      document.getElementById("validationDetails").hidden = true;
+      document.getElementById("validationContent").replaceChildren();
+      document.getElementById("saveJob").disabled = true;
+      document.getElementById("downloadReport").disabled = true;
+      try {
+         var refrigerant = document.getElementById("refrigerant").value;
+        document.getElementById("chartTitle").textContent = refrigerant + " Pressure–Enthalpy Chart";
+        var suctionPressure = toBarAbsolute(Number(document.getElementById("suctionPressure").value), pressureUnitEl.value, pressureTypeEl.value);
+        var dischargePressure = toBarAbsolute(Number(document.getElementById("dischargePressure").value), pressureUnitEl.value, pressureTypeEl.value);
+        var suctionTemperature = Number(document.getElementById("suctionTemperature").value);
+        var dischargeTemperature = Number(document.getElementById("dischargeTemperature").value);
+        var condenserTemperature = Number(document.getElementById("condenserTemperature").value);
+       const missingReadings = [
+  "suctionPressure",
+  "dischargePressure",
+  "suctionTemperature",
+  "dischargeTemperature",
+  "condenserTemperature"
+].filter(id => document.getElementById(id).value.trim() === "");
+       if (missingReadings.length > 0) {
+  const confirmed = confirm(
+    "Missing readings: " + missingReadings.join(", ") +
+    "\n\nWould you like to estimate the missing readings?"
+  );
+  if (!confirmed) return;
+}
+
+        const estimatedReadings = [];
+
+if (missingReadings.length > 0) {
+  if (missingReadings.includes("suctionPressure") ||
+      missingReadings.includes("dischargePressure")) {
+    throw new Error(
+      "Automatic pressure estimation is not yet supported. " +
+      "Please enter both pressure readings."
+    );
+  }
+
+  if (missingReadings.includes("suctionTemperature")) {
+    const saturationK = window.coolpropModule.PropsSI(
+      "T", "P", suctionPressure * 100000, "Q", 1, refrigerant
+    );
+    suctionTemperature = saturationK - 273.15 + 5;
+    estimatedReadings.push("Suction temperature (5 K assumed superheat)");
+  }
+
+  if (missingReadings.includes("condenserTemperature")) {
+    const saturationK = window.coolpropModule.PropsSI(
+      "T", "P", dischargePressure * 100000, "Q", 0, refrigerant
+    );
+    condenserTemperature = saturationK - 273.15 - 5;
+    estimatedReadings.push("Condenser outlet temperature (5 K assumed subcooling)");
+  }
+
+  if (missingReadings.includes("dischargeTemperature")) {
+    throw new Error(
+      "Discharge temperature estimation is not yet supported. " +
+      "Please enter a discharge temperature."
+    );
+  }
+}
+        if (!Number.isFinite(suctionPressure) || !Number.isFinite(dischargePressure) || suctionPressure<=0 || dischargePressure<=0) throw new Error("Both pressures must be above zero bar absolute.");
+        if (![suctionTemperature, dischargeTemperature, condenserTemperature].every(Number.isFinite)) throw new Error("Please enter valid temperatures.");
+        var condenserTemperatureK = condenserTemperature + 273.15;
+        var dischargeTemperatureK = dischargeTemperature + 273.15;
+        var dischargePressurePa = dischargePressure * 100000;
+        
+        var suctionTemperatureK = suctionTemperature + 273.15;
+        var suctionPressurePa = suctionPressure * 100000;
+        var hLiquid = window.coolpropModule.PropsSI(
+  "H", "P", dischargePressurePa, "Q", 0, refrigerant
+);
+        var hVapour = window.coolpropModule.PropsSI(
+  "H", "P", dischargePressurePa, "Q", 1, refrigerant
+);
+        var criticalPressureBar = window.coolpropModule.PropsSI("PCRIT", "", 0, "", 0, refrigerant) / 100000;
+       if (!Number.isFinite(criticalPressureBar) || criticalPressureBar <= 0) {
+  throw new Error("Could not calculate critical pressure for " + refrigerant);
+}
+        var maxSuctionPressure = Math.min(criticalPressureBar * 0.9, 30);
+        var maxDischargePressure = Math.min(criticalPressureBar * 0.95, 40);
+        var minChartPressure = Math.max(0.01, Math.min(2, suctionPressure * 0.75));
+        // Sample below critical pressure; exact critical properties are calculated separately.
+        var maxChartPressure = criticalPressureBar * 0.999;
+        var saturationPressuresBar = Array.from({length:101}, (_,i) => minChartPressure * Math.pow(maxChartPressure / minChartPressure, i/100));
+        [0.98, 0.99, 0.995, 0.998, 0.999].forEach(f => {
+          const p = criticalPressureBar * f;
+          if (p > minChartPressure && p <= maxChartPressure) saturationPressuresBar.push(p);
+        });
+        saturationPressuresBar.sort((a,b) => a-b);
+        saturationPressuresBar = saturationPressuresBar.filter((p,i,a) => i === 0 || p > a[i-1] * (1+1e-9));
+        if (!Number.isFinite(suctionPressure) || suctionPressure <= 0 || suctionPressure > maxSuctionPressure) {
+  alert("Please enter a suction pressure above zero and below " + maxSuctionPressure.toFixed(2) + " bar absolute.");
+  return;
+}
+        if (
+  !Number.isFinite(dischargePressure) ||
+  dischargePressure <= suctionPressure ||
+  dischargePressure > maxDischargePressure
+) {
+  alert("Discharge pressure must be greater than suction pressure and no higher than " + maxDischargePressure.toFixed(2) + " bar absolute.");
+  return;
+}
+        var suctionSaturationK = window.coolpropModule.PropsSI(
+  "T", "P", suctionPressurePa, "Q", 1, refrigerant
+);
+        var suctionSuperheat = suctionTemperatureK - suctionSaturationK;
+        if (suctionTemperatureK <= suctionSaturationK + 0.1) {
+  alert(
+    "Suction temperature must be above saturation temperature (" +
+    (suctionSaturationK - 273.15).toFixed(1) +
+    "°C) at the entered pressure."
+  );
+  return;
+}
+        var hSuction = window.coolpropModule.PropsSI(
+  "H", "P", suctionPressurePa, "T", suctionTemperatureK, refrigerant
+);
+        console.log("Compressor suction enthalpy:", (hSuction / 1000).toFixed(2), "kJ/kg");
+        if (
+  !Number.isFinite(dischargeTemperature) ||
+  dischargeTemperature < -40 ||
+  dischargeTemperature > 150
+) {
+  alert("Please enter a discharge temperature between -40°C and 150°C.");
+  return;
+}
+        var hDischarge = window.coolpropModule.PropsSI(
+  "H", "P", dischargePressurePa, "T", dischargeTemperatureK, refrigerant
+);
+        var compressorWork = (hDischarge - hSuction) / 1000;
+        if (!Number.isFinite(compressorWork) || compressorWork <= 0) throw new Error("Discharge enthalpy must exceed suction enthalpy for this compressor cycle. Check your temperatures and pressures.");
+        if (
+  !Number.isFinite(condenserTemperature) ||
+  condenserTemperature < -40 ||
+  condenserTemperature > 100
+) {
+  alert("Please enter a condenser outlet temperature between -40°C and 100°C.");
+  return;
+}
+        var condensingSaturationK = window.coolpropModule.PropsSI(
+  "T", "P", dischargePressurePa, "Q", 0, refrigerant
+);
+        var liquidSubcooling = condensingSaturationK - condenserTemperatureK;
+        if (liquidSubcooling < 0) {
+  alert("Warning: Condenser outlet is not subcooled liquid. Check the discharge pressure and condenser outlet temperature.");
+  return;
+}
+        var hCondenser = window.coolpropModule.PropsSI(
+  "H", "P", dischargePressurePa, "T", condenserTemperatureK, refrigerant
+);
+        var hExpansion = hCondenser;
+        var refrigerationEffect = (hSuction - hExpansion) / 1000;
+        if (!Number.isFinite(refrigerationEffect) || refrigerationEffect <= 0) throw new Error("Refrigeration effect must be positive. Check the entered operating conditions.");
+        var cop = compressorWork > 0 && refrigerationEffect > 0
+  ? refrigerationEffect / compressorWork
+  : NaN;
+        var pressureRatio = dischargePressure / suctionPressure;
+        // Internal diagnostics: do not label these as independent verification.
+        // Use DOM text nodes rather than interpolating user input into HTML.
+        const diagnostics = document.getElementById("validationContent");
+        const details = document.getElementById("validationDetails");
+        const cp = window.coolpropModule;
+        const diagRows = [
+          ["Refrigerant", refrigerant],
+          ["Suction pressure", suctionPressure.toFixed(5) + " bar absolute (" + suctionPressurePa.toFixed(0) + " Pa)"],
+          ["Suction temperature", suctionTemperature.toFixed(3) + " °C (" + suctionTemperatureK.toFixed(3) + " K)"],
+          ["Discharge pressure", dischargePressure.toFixed(5) + " bar absolute (" + dischargePressurePa.toFixed(0) + " Pa)"],
+          ["Discharge temperature", dischargeTemperature.toFixed(3) + " °C (" + dischargeTemperatureK.toFixed(3) + " K)"],
+          ["Condenser outlet temperature", condenserTemperature.toFixed(3) + " °C (" + condenserTemperatureK.toFixed(3) + " K)"],
+          ["Suction saturation temperature (Q=1)", (suctionSaturationK - 273.15).toFixed(4) + " °C"],
+          ["Condensing bubble-point temperature (Q=0)", (condensingSaturationK - 273.15).toFixed(4) + " °C"],
+          ["Suction enthalpy H(P,T)", hSuction.toFixed(2) + " J/kg = " + (hSuction / 1000).toFixed(4) + " kJ/kg"],
+          ["Discharge enthalpy H(P,T)", hDischarge.toFixed(2) + " J/kg = " + (hDischarge / 1000).toFixed(4) + " kJ/kg"],
+          ["Condenser outlet enthalpy H(P,T)", hCondenser.toFixed(2) + " J/kg = " + (hCondenser / 1000).toFixed(4) + " kJ/kg"],
+          ["Expansion outlet enthalpy (assumed)", hExpansion.toFixed(2) + " J/kg = " + (hExpansion / 1000).toFixed(4) + " kJ/kg"],
+          ["Refrigeration effect (h1 − h4)", refrigerationEffect.toFixed(4) + " kJ/kg"],
+          ["Compressor specific work (h2 − h1)", compressorWork.toFixed(4) + " kJ/kg"],
+          ["COP = (h1 − h4)/(h2 − h1)", cop.toFixed(4)],
+          ["Suction superheat", suctionSuperheat.toFixed(4) + " K"],
+          ["Liquid subcooling (bubble-point basis)", liquidSubcooling.toFixed(4) + " K"]
+        ];
+        const table = document.createElement("table");
+        table.className = "validation-table";
+        const header = table.createTHead().insertRow();
+        for (const heading of ["Property / calculation", "Value"]) {
+          const th = document.createElement("th"); th.scope = "col"; th.textContent = heading; header.appendChild(th);
+        }
+        const tbody = table.createTBody();
+        for (const [label, value] of diagRows) {
+          const tr = tbody.insertRow();
+          for (const content of [label, value]) { const td = tr.insertCell(); td.textContent = content; }
+        }
+        diagnostics.appendChild(table);
+        const checks = [
+          ["Finite enthalpy and COP values", [hSuction, hDischarge, hCondenser, cop].every(Number.isFinite)],
+          ["Discharge pressure above suction pressure", dischargePressure > suctionPressure],
+          ["Suction is superheated", suctionSuperheat > 0.1],
+          ["Condenser outlet is subcooled (bubble-point basis)", liquidSubcooling >= 0],
+          ["Positive compressor specific work", compressorWork > 0],
+          ["Positive refrigeration effect", refrigerationEffect > 0],
+          ["Isenthalpic expansion assumption", Math.abs(hExpansion - hCondenser) < 0.001]
+        ];
+        const heading = document.createElement("h4"); heading.textContent = "Internal consistency checks"; diagnostics.appendChild(heading);
+        for (const [name, pass] of checks) {
+          const line = document.createElement("p"); line.className = "validation-status";
+          line.textContent = (pass ? "PASS — " : "CHECK — ") + name;
+          diagnostics.appendChild(line);
+        }
+        const notice = document.createElement("p"); notice.className = "validation-note";
+        notice.textContent = "External reference comparison: NOT PERFORMED. Absolute enthalpy comparisons require matching reference states. Passing these internal checks does not establish model accuracy, equipment suitability, compressor efficiency or physically realistic operating conditions.";
+        diagnostics.appendChild(notice);
+        if (estimatedReadings.length) {
+          const estimate = document.createElement("p"); estimate.className = "validation-note";
+          estimate.textContent = "ESTIMATED READINGS: " + estimatedReadings.join(", ") + ". Results are not based entirely on measured inputs.";
+          diagnostics.appendChild(estimate);
+        }
+        details.hidden = false;
+
+        console.log("Condenser outlet enthalpy:", (hCondenser / 1000).toFixed(2), "kJ/kg");
+        console.log("Compressor discharge enthalpy:", (hDischarge / 1000).toFixed(2), "kJ/kg");
+
+var saturationData = saturationPressuresBar.map(function(bar) {
+  try {
+  var p = bar * 100000;
+
+  var liquid = window.coolpropModule.PropsSI(
+    "H", "P", p, "Q", 0, refrigerant
+  );
+
+  var vapour = window.coolpropModule.PropsSI(
+    "H", "P", p, "Q", 1, refrigerant
+  );
+
+  var saturationTemperatureK = window.coolpropModule.PropsSI("T", "P", p, "Q", 0, refrigerant);
+  return {
+    pressureBar: bar,
+    temperatureC: saturationTemperatureK - 273.15,
+    liquidKJ: liquid / 1000,
+    vapourKJ: vapour / 1000
+  };
+  } catch (e) { return null; }
+}).filter(point => point && Number.isFinite(point.temperatureC) && Number.isFinite(point.liquidKJ) && Number.isFinite(point.vapourKJ) && Math.abs(point.liquidKJ)<10000 && Math.abs(point.vapourKJ)<10000);
+if (saturationData.length < 4) throw new Error("Could not calculate enough saturation points for this refrigerant.");
+// Calculate a genuine critical-state enthalpy using critical temperature and density.
+// Never fabricate a meeting point if the property engine cannot return one.
+var criticalPoint = null;
+try {
+  const criticalT = window.coolpropModule.PropsSI("TCRIT", "", 0, "", 0, refrigerant);
+  const criticalDensity = window.coolpropModule.PropsSI("RHOCRIT", "", 0, "", 0, refrigerant);
+  const criticalH = window.coolpropModule.PropsSI("H", "T", criticalT, "D", criticalDensity, refrigerant) / 1000;
+  if (Number.isFinite(criticalH) && Math.abs(criticalH) < 10000 &&
+      criticalH >= saturationData[saturationData.length-1].liquidKJ - 30 &&
+      criticalH <= saturationData[saturationData.length-1].vapourKJ + 30) {
+    criticalPoint = { pressureBar: criticalPressureBar, temperatureC: criticalT - 273.15,
+                      liquidKJ: criticalH, vapourKJ: criticalH };
+  }
+} catch (error) { console.warn("Critical state unavailable:", error); }
+
+
+
+        document.getElementById("result").textContent =
+         (estimatedReadings.length > 0
+  ? "⚠ ESTIMATED CYCLE — NOT MEASURED\n" +
+    "Assumed readings: " + estimatedReadings.join(", ") + "\n" +
+    "For indicative use only. Verify on site.\n\n"
+  : "") +
+          "CONDENSER OUTLET\n" +
+"Liquid subcooling: " + liquidSubcooling.toFixed(2) + " K\n" +
+          "Refrigeration effect: " + refrigerationEffect.toFixed(2) + " kJ/kg\n" +
+          "Compressor work: " + compressorWork.toFixed(2) + " kJ/kg\n" +
+          "COP: " + (Number.isFinite(cop) ? cop.toFixed(2) : "Invalid operating conditions") + "\n" +
+          "Compressor pressure ratio: " + pressureRatio.toFixed(2) + "\n" +
+"\n" +
+         "COMPRESSOR SUCTION\n" +
+"Pressure: " + suctionPressure + " bar absolute\n" +
+"Temperature: " + suctionTemperature .toFixed(2)+ " °C\n" +
+"Enthalpy: " + (hSuction / 1000).toFixed(2) + " kJ/kg\n" +
+"Suction superheat: " + suctionSuperheat.toFixed(2) + " K\n\n" +
+          "Refrigerant: " + refrigerant + "\n" +
+          "Discharge pressure: " + dischargePressure + " bar absolute\n" +
+          "Discharge temperature: " + dischargeTemperature + " °C\n" +
+          "Discharge enthalpy: " + (hDischarge / 1000).toFixed(2) + " kJ/kg\n" +
+          "Condenser outlet temperature: " + condenserTemperature + " °C\n" +
+          "Condenser outlet enthalpy: " + (hCondenser / 1000).toFixed(2) + " kJ/kg\n" +
+"Saturated liquid: " + (hLiquid / 1000).toFixed(2) + " kJ/kg\n" +
+"Saturated vapour: " + (hVapour / 1000).toFixed(2) + " kJ/kg"+
+"";
+        // Build a real HTML table, so headings and numbers stay aligned on mobile and desktop.
+const tableRows = saturationData.concat(criticalPoint ? [criticalPoint] : []);
+const tableBody = tableRows.map((point, index) =>
+  `<tr${criticalPoint && index === tableRows.length - 1 ? ' class="critical-row"' : ''}>` +
+  `<td>${point.pressureBar.toFixed(3)}</td>` +
+  `<td>${point.temperatureC.toFixed(2)}</td>` +
+  `<td>${point.liquidKJ.toFixed(2)}</td>` +
+  `<td>${point.vapourKJ.toFixed(2)}</td></tr>`
+).join("");
+document.getElementById("saturationDataDisplay").innerHTML =
+  `<table class="saturation-table"><thead><tr>` +
+  `<th scope="col">Pressure (bar abs)</th><th scope="col">Saturation temp (°C)</th>` +
+  `<th scope="col">Liquid (kJ/kg)</th><th scope="col">Vapour (kJ/kg)</th>` +
+  `</tr></thead><tbody>${tableBody}</tbody></table>` +
+  `<p class="saturation-note">Critical pressure: ${criticalPressureBar.toFixed(3)} bar absolute. ` +
+  (criticalPoint ? `Final highlighted row is the CoolProp critical state (liquid and vapour become identical).` :
+  `Critical-state enthalpy could not be validated; curves end at 99.9% of critical pressure.`) + `</p>`;
+document.getElementById("saturationDetails").hidden = false;
+const domeData = saturationData.concat(criticalPoint ? [criticalPoint] : []);
+if (criticalPoint) maxChartPressure = criticalPressureBar;
+const minEnthalpy = Math.floor(Math.min(hSuction / 1000, hDischarge / 1000, hCondenser / 1000, hExpansion / 1000, ...domeData.map(p => p.liquidKJ), ...domeData.map(p => p.vapourKJ)) / 50) * 50 - 50;
+const maxEnthalpy = Math.ceil(Math.max(hSuction / 1000, hDischarge / 1000, hCondenser / 1000, hExpansion / 1000, ...domeData.map(p => p.liquidKJ), ...domeData.map(p => p.vapourKJ)) / 50) * 50 + 50;   
+const chart = document.getElementById("phChart");
+        const chartX = enthalpy => 55 + ((enthalpy - minEnthalpy) / (maxEnthalpy - minEnthalpy)) * 595;
+        const chartY = pressure => 380 - (Math.log(pressure / minChartPressure) / Math.log(maxChartPressure / minChartPressure)) * 300;
+
+// Temperature contours (isotherms) in the single-phase vapour region.
+// These are calculated from CoolProp at fixed T and varying P; never
+// connect points across a failed property call or across the saturation boundary.
+const isothermTemperaturesC = [-40, -20, 0, 20, 40, 60, 80, 100, 120];
+const isothermPaths = [];
+const isothermLabels = [];
+const occupiedLabelBoxes = [];
+const criticalTemperatureC = window.coolpropModule.PropsSI("TCRIT", "", 0, "", 0, refrigerant) - 273.15;
+for (const temperatureC of isothermTemperaturesC) {
+  const temperatureK = temperatureC + 273.15;
+  if (temperatureK <= 0) continue;
+  let vapourLimitBar = maxChartPressure * 0.999;
+  if (temperatureC < criticalTemperatureC) {
+    try {
+      const satPressureBar = window.coolpropModule.PropsSI("P", "T", temperatureK, "Q", 1, refrigerant) / 100000;
+      if (!Number.isFinite(satPressureBar) || satPressureBar <= 0) continue;
+      vapourLimitBar = Math.min(vapourLimitBar, satPressureBar * 0.985);
+    } catch (_) { continue; }
+  }
+  if (vapourLimitBar <= minChartPressure * 1.08) continue;
+  const points = [];
+  for (let i = 0; i <= 55; i++) {
+    const pressureBar = minChartPressure * Math.pow(vapourLimitBar / minChartPressure, i / 55);
+    try {
+      const enthalpyKJ = window.coolpropModule.PropsSI(
+        "H", "P", pressureBar * 100000, "T", temperatureK, refrigerant
+      ) / 1000;
+      if (Number.isFinite(enthalpyKJ) && Math.abs(enthalpyKJ) < 10000) {
+        points.push({ x: chartX(enthalpyKJ), y: chartY(pressureBar) });
+      } else if (points.length > 1) break;
+    } catch (_) { if (points.length > 1) break; }
+  }
+  if (points.length < 3) continue;
+  isothermPaths.push(
+    `<path d="${points.map((pt,i) => `${i ? 'L' : 'M'}${pt.x.toFixed(2)},${pt.y.toFixed(2)}`).join(' ')}" fill="none" stroke="#0d9488" stroke-width="1.25" stroke-dasharray="4,3" opacity="0.85"/>`
+  );
+  // Choose a readable location on the contour. Skip a label rather than
+  // overlap another label or one of the four measured cycle points.
+  const label = `${temperatureC}°C`;
+  const width = label.length * 6.3 + 6;
+  const cycleLocations = [
+    [chartX(hSuction / 1000), chartY(suctionPressure)],
+    [chartX(hDischarge / 1000), chartY(dischargePressure)],
+    [chartX(hCondenser / 1000), chartY(dischargePressure)],
+    [chartX(hExpansion / 1000), chartY(suctionPressure)]
+  ];
+  for (const fraction of [0.32, 0.48, 0.64, 0.78, 0.2, 0.9]) {
+    const point = points[Math.floor((points.length - 1) * fraction)];
+    const x = point.x + 5, y = point.y - 7;
+    const box = { left: x - 2, right: x + width, top: y - 11, bottom: y + 3 };
+    if (box.left < 62 || box.right > 643 || box.top < 87 || box.bottom > 373) continue;
+    if (occupiedLabelBoxes.some(other =>
+      box.left < other.right + 9 && box.right + 9 > other.left &&
+      box.top < other.bottom + 7 && box.bottom + 7 > other.top)) continue;
+    if (cycleLocations.some(([cx,cy]) =>
+      cx > box.left - 12 && cx < box.right + 12 &&
+      cy > box.top - 12 && cy < box.bottom + 12)) continue;
+    occupiedLabelBoxes.push(box);
+    isothermLabels.push(`<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="10" fill="#0f766e" paint-order="stroke" stroke="white" stroke-width="2.5" stroke-linejoin="round">${label}</text>`);
+    break;
+  }
+}
+
+// Isentropes: constant specific-entropy contours in the single-phase vapour region.
+// Sample entropy from CoolProp and solve H(P,S), checking the vapour boundary
+// independently at every pressure. Never join across invalid/2-phase samples.
+const isentropePaths = [];
+const isentropeLabels = [];
+try {
+  const cp = window.coolpropModule;
+  const suctionEntropy = cp.PropsSI("S", "P", suctionPressurePa, "T", suctionTemperatureK, refrigerant);
+  const lowSatEntropy = cp.PropsSI("S", "P", minChartPressure * 100000, "Q", 1, refrigerant);
+  const highSatEntropy = cp.PropsSI("S", "P", maxChartPressure * 0.995 * 100000, "Q", 1, refrigerant);
+  if ([suctionEntropy, lowSatEntropy, highSatEntropy].every(Number.isFinite)) {
+    // kJ/(kg K), chosen to span the plotted vapour region and the measured suction state.
+    const entropyMin = Math.min(lowSatEntropy, highSatEntropy, suctionEntropy) / 1000;
+    const entropyMax = Math.max(lowSatEntropy, highSatEntropy, suctionEntropy) / 1000;
+    const step = 0.1;
+    const first = Math.ceil((entropyMin + 0.02) / step) * step;
+    const last = Math.min(first + 1.2, entropyMax + 0.65);
+    for (let entropyKJ = first; entropyKJ <= last + 1e-8; entropyKJ += step) {
+      const entropySI = entropyKJ * 1000;
+      const segments = [];
+      let segment = [];
+      const finishSegment = () => { if (segment.length >= 3) segments.push(segment); segment = []; };
+      for (let i = 0; i <= 100; i++) {
+        const pressureBar = minChartPressure * Math.pow(maxChartPressure * 0.999 / minChartPressure, i / 100);
+        try {
+          const pressurePa = pressureBar * 100000;
+          const satVapourEntropy = cp.PropsSI("S", "P", pressurePa, "Q", 1, refrigerant);
+          if (!Number.isFinite(satVapourEntropy) || entropySI <= satVapourEntropy + 2) { finishSegment(); continue; }
+          const enthalpyKJ = cp.PropsSI("H", "P", pressurePa, "S", entropySI, refrigerant) / 1000;
+          const temperatureK = cp.PropsSI("T", "P", pressurePa, "S", entropySI, refrigerant);
+          if (!Number.isFinite(enthalpyKJ) || !Number.isFinite(temperatureK) ||
+              Math.abs(enthalpyKJ) > 10000 || temperatureK <= 0 ||
+              enthalpyKJ < minEnthalpy || enthalpyKJ > maxEnthalpy) { finishSegment(); continue; }
+          segment.push({ x: chartX(enthalpyKJ), y: chartY(pressureBar) });
+        } catch (_) { finishSegment(); }
+      }
+      finishSegment();
+      for (const points of segments) {
+        isentropePaths.push(`<path d="${points.map((pt,i) => `${i ? 'L' : 'M'}${pt.x.toFixed(2)},${pt.y.toFixed(2)}`).join(' ')}" fill="none" stroke="#8b5cf6" stroke-width="1.15" stroke-dasharray="7,4" opacity="0.8"/>`);
+      }
+      const longest = segments.sort((a,b) => b.length - a.length)[0];
+      if (!longest || longest.length < 8) continue;
+      const label = `s=${entropyKJ.toFixed(2)}`;
+      const width = label.length * 6.3 + 6;
+      const cycleLocations = [
+        [chartX(hSuction / 1000), chartY(suctionPressure)],
+        [chartX(hDischarge / 1000), chartY(dischargePressure)],
+        [chartX(hCondenser / 1000), chartY(dischargePressure)],
+        [chartX(hExpansion / 1000), chartY(suctionPressure)]
+      ];
+      for (const fraction of [0.7, 0.5, 0.85, 0.3, 0.15]) {
+        const point = longest[Math.floor((longest.length - 1) * fraction)];
+        const x = point.x + 5, y = point.y - 7;
+        const box = {left:x-2, right:x+width, top:y-11, bottom:y+3};
+        if (box.left < 62 || box.right > 643 || box.top < 87 || box.bottom > 373) continue;
+        if (occupiedLabelBoxes.some(other => box.left < other.right + 9 && box.right + 9 > other.left && box.top < other.bottom + 7 && box.bottom + 7 > other.top)) continue;
+        if (cycleLocations.some(([cx,cy]) => cx > box.left-12 && cx < box.right+12 && cy > box.top-12 && cy < box.bottom+12)) continue;
+        occupiedLabelBoxes.push(box);
+        isentropeLabels.push(`<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="9" fill="#6d28d9" paint-order="stroke" stroke="white" stroke-width="2.5">${label}</text>`);
+        break;
+      }
+    }
+  }
+} catch (error) { console.warn("Entropy contours unavailable:", error); }
+
+function applyChartVisibility() {
+  const svg = document.getElementById("phChart");
+  for (const [groupId, controlId] of [
+    ["chart-dome", "showDome"],
+    ["chart-temperature", "showTemperature"],
+    ["chart-entropy", "showEntropy"],
+    ["chart-quality", "showQuality"]
+  ]) {
+    const group = svg.querySelector("#" + groupId);
+    if (group) group.style.display = document.getElementById(controlId).checked ? "" : "none";
+  }
+}
+
+const liquidPoints = domeData.map(p => ({
+  x: chartX(p.liquidKJ),
+  y: chartY(p.pressureBar)
+}));
+const vapourPoints = domeData.map(p => ({
+  x: chartX(p.vapourKJ),
+  y: chartY(p.pressureBar)
+}));
+
+// Two-phase quality contours: h = h_f + x (h_g - h_f) at each saturation pressure.
+// Values come from the same CoolProp saturation samples used for the dome.
+const qualityContours = [];
+for (let percent = 10; percent <= 90; percent += 10) {
+  const quality = percent / 100;
+  const points = saturationData.filter(p => Number.isFinite(p.liquidKJ) && Number.isFinite(p.vapourKJ) && p.vapourKJ > p.liquidKJ)
+    .map(p => ({x:chartX(p.liquidKJ + quality * (p.vapourKJ - p.liquidKJ)), y:chartY(p.pressureBar)}));
+  if (criticalPoint) points.push({x:chartX(criticalPoint.liquidKJ),y:chartY(criticalPoint.pressureBar)});
+  if (points.length < 2) continue;
+  const d = points.map((p,i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ');
+  // Label each second line, positioned within the dome near its lower third.
+  let label = '';
+  if (percent % 20 === 10) {
+    const at = points[Math.floor(points.length * 0.28)];
+    if (at && at.x > 65 && at.x < 630 && at.y > 95 && at.y < 365) {
+      label = `<text x="${at.x.toFixed(2)}" y="${(at.y - 5).toFixed(2)}" text-anchor="middle" font-size="9" fill="#92400e" paint-order="stroke" stroke="white" stroke-width="2.5">${percent}%</text>`;
+    }
+  }
+  qualityContours.push(`<path d="${d}" fill="none" stroke="#b45309" stroke-width="1.2" stroke-dasharray="2,4" opacity="0.85"/>${label}`);
+}
+
+const makePath = points =>
+  points.map((p, i) =>
+    (i === 0 ? "M" : "L") + p.x + "," + p.y
+  ).join(" ");
+
+chart.innerHTML = `
+<defs><clipPath id="ph-plot-clip"><rect x="55" y="80" width="595" height="300"/></clipPath></defs>
+<g clip-path="url(#ph-plot-clip)">
+  <g id="chart-temperature">${isothermPaths.join("")}${isothermLabels.join("")}</g>
+  <g id="chart-entropy">${isentropePaths.join("")}${isentropeLabels.join("")}</g>
+  <g id="chart-quality">${qualityContours.join("")}</g>
+</g>
+<line
+  x1="${chartX(hSuction / 1000)}"
+  y1="${chartY(suctionPressure)}"
+  x2="${chartX(hDischarge / 1000)}"
+  y2="${chartY(dischargePressure)}"
+  stroke="red"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
+<line
+  x1="${chartX(hDischarge / 1000)}"
+  y1="${chartY(dischargePressure)}"
+  x2="${chartX(hCondenser / 1000)}"
+  y2="${chartY(dischargePressure)}"
+  stroke="green"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
+<line
+  x1="${chartX(hCondenser / 1000)}"
+  y1="${chartY(dischargePressure)}"
+  x2="${chartX(hExpansion / 1000)}"
+  y2="${chartY(suctionPressure)}"
+  stroke="purple"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
+<line
+  x1="${chartX(hExpansion / 1000)}"
+  y1="${chartY(suctionPressure)}"
+  x2="${chartX(hSuction / 1000)}"
+  y2="${chartY(suctionPressure)}"
+  stroke="blue"
+  stroke-width="2"
+  stroke-dasharray="6,4"
+/>
+  <g id="chart-dome"><path d="${makePath(liquidPoints)}"
+        fill="none" stroke="blue" stroke-width="3"/>
+  <path d="${makePath(vapourPoints)}"
+        fill="none" stroke="orange" stroke-width="3"/></g>
+         ${[minChartPressure, ...[0.5,1,2,4,6,8,10,14,20,30,40,50,60,70].filter(p => p>minChartPressure*1.03 && p<maxChartPressure*0.98),maxChartPressure].map(p => {
+    const y = chartY(p);
+    return `
+      <line x1="55" y1="${y}" x2="650" y2="${y}"
+            stroke="#d1d5db" stroke-width="1"/>
+      <text x="38" y="${y + 4}" text-anchor="end"
+            font-size="10" fill="#374151">${Number(p.toFixed(2))}</text>
+    `;
+  }).join("")}
+    ${Array.from({ length: 8 }, (_, i) => minEnthalpy + i * (maxEnthalpy - minEnthalpy) / 7).map(h => {
+    const x = chartX(h);
+    return `
+      <line x1="${x}" y1="80" x2="${x}" y2="380"
+            stroke="#d1d5db" stroke-width="1"/>
+      <text x="${x}" y="397" text-anchor="middle"
+            font-size="11" fill="#374151">${h.toFixed(0)}</text>
+    `;
+  }).join("")}
+  <text x="350" y="415" font-size="14">Enthalpy (kJ/kg)</text>
+  <text x="15" y="215" font-size="14"
+        transform="rotate(-90 15 215)">Pressure (bar abs, log)</text>
+        <circle
+  cx="${chartX(hSuction / 1000)}"
+ cy="${chartY(suctionPressure)}"
+  r="6"
+  fill="red"
+  stroke="white"
+  stroke-width="2"
+  data-point="Compressor suction"
+/>
+<text
+  x="${chartX(hSuction / 1000) + 10}"
+  y="${chartY(suctionPressure) - 10}"
+  font-size="11"
+  fill="#b91c1c"
+  pointer-events="none"
+>${suctionTemperature.toFixed(1)}°C</text>
+<circle
+  cx="${chartX(hDischarge / 1000)}"
+  cy="${chartY(dischargePressure)}"
+  r="6"
+  fill="orange"
+  stroke="white"
+  stroke-width="2"
+  data-point="Compressor discharge"
+/>
+<circle
+  cx="${chartX(hCondenser / 1000)}"
+  cy="${chartY(dischargePressure)}"
+  r="6"
+  fill="limegreen"
+  stroke="white"
+  stroke-width="2"
+  data-point="Condenser outlet"
+/>
+<circle
+  cx="${chartX(hExpansion / 1000)}"
+  cy="${chartY(suctionPressure)}"
+  r="6"
+  fill="purple"
+  stroke="white"
+  stroke-width="2"
+  data-point="Expansion valve outlet"
+/>
+`;
+        applyChartVisibility();
+        const state = {
+         estimatedReadings: [...estimatedReadings],
+          refrigerant, suctionPressure, suctionTemperature, dischargePressure,
+          inputPressureUnit:pressureUnitEl.value, inputPressureType:pressureTypeEl.value,
+          suctionPressureEntered:Number(document.getElementById("suctionPressure").value),
+          dischargePressureEntered:Number(document.getElementById("dischargePressure").value),
+          dischargeTemperature, condenserTemperature,
+          suctionEnthalpyKJ: hSuction / 1000,
+          dischargeEnthalpyKJ: hDischarge / 1000,
+          condenserEnthalpyKJ: hCondenser / 1000,
+          expansionEnthalpyKJ: hExpansion / 1000,
+          suctionSuperheatK: suctionSuperheat,
+          liquidSubcoolingK: liquidSubcooling,
+          refrigerationEffectKJ: refrigerationEffect,
+          compressorWorkKJ: compressorWork,
+          cop: Number.isFinite(cop) ? cop : null
+        };
+        window.latestCycle = state;
+        document.getElementById("saveJob").disabled = false;
+        document.getElementById("downloadReport").disabled = false;
+        document.getElementById("pointDetails").textContent = "Select a coloured point to inspect its values.";
+        const expansionTemperatureK = window.coolpropModule.PropsSI(
+  "T", "P", suctionPressurePa, "H", hExpansion, refrigerant
+);
+        const pointValues = {
+          "Compressor suction": [suctionPressure, hSuction / 1000, suctionTemperatureK],
+"Compressor discharge": [dischargePressure, hDischarge / 1000, dischargeTemperatureK],
+"Condenser outlet": [dischargePressure, hCondenser / 1000, condenserTemperatureK],
+"Expansion valve outlet": [suctionPressure, hExpansion / 1000, expansionTemperatureK]
+        };
+        chart.querySelectorAll("circle[data-point]").forEach(circle => {
+          const name = circle.getAttribute("data-point");
+          const [pressure, enthalpy, temperatureK] = pointValues[name];
+          circle.setAttribute("tabindex", "0");
+          circle.setAttribute("role", "button");
+          circle.setAttribute("aria-label", name + ": " + pressure + " bar, " + enthalpy.toFixed(2) + " kJ/kg");
+          const show = () => {
+            document.getElementById("pointDetails").textContent =
+  name + " — " + pressure.toFixed(2) + " bar absolute | " +
+  (temperatureK - 273.15).toFixed(1) + " °C | " +
+  enthalpy.toFixed(2) + " kJ/kg";
+          };
+          circle.addEventListener("click", show);
+          circle.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") show(); });
+        });
+      } catch (error) {
+        document.getElementById("result").textContent =
+          "Calculation error: " + (error.stack || error.message);
+      }
+    });
+
+    function makeReport(cycle, name) {
+      const fmt = (v, unit) => Number(v).toFixed(2) + " " + unit;
+      return [
+        "REFRIGERANT CYCLE PRO — JOB REPORT",
+        "Job: " + (name || "Unnamed job"),
+        "Generated: " + new Date().toLocaleString(),
+        "Refrigerant: " + cycle.refrigerant,
+        "Pressure input: " + (cycle.inputPressureUnit || "bar") + " " + (cycle.inputPressureType || "absolute"),
+        "Gauge conversion assumes standard atmospheric pressure (1.01325 bar).",
+       cycle.estimatedReadings && cycle.estimatedReadings.length
+  ? "WARNING: ESTIMATED CYCLE - NOT MEASURED\nAssumed readings: " + cycle.estimatedReadings.join(", ") + "\nIndicative use only. Verify on site."
+  : "Cycle based on entered readings.",
+        "",
+        "COMPRESSOR SUCTION",
+        "Pressure: " + fmt(cycle.suctionPressure, "bar absolute"),
+        ...(cycle.suctionPressureEntered !== undefined ? ["Entered pressure: " + fmt(cycle.suctionPressureEntered, (cycle.inputPressureUnit || "bar") + " " + (cycle.inputPressureType || "absolute"))] : []),
+        "Temperature: " + fmt(cycle.suctionTemperature, "°C"),
+        "Enthalpy: " + fmt(cycle.suctionEnthalpyKJ, "kJ/kg"),
+        "Superheat: " + fmt(cycle.suctionSuperheatK, "K"),
+        "",
+        "COMPRESSOR DISCHARGE",
+        "Pressure: " + fmt(cycle.dischargePressure, "bar absolute"),
+        ...(cycle.dischargePressureEntered !== undefined ? ["Entered pressure: " + fmt(cycle.dischargePressureEntered, (cycle.inputPressureUnit || "bar") + " " + (cycle.inputPressureType || "absolute"))] : []),
+        "Temperature: " + fmt(cycle.dischargeTemperature, "°C"),
+        "Enthalpy: " + fmt(cycle.dischargeEnthalpyKJ, "kJ/kg"),
+        "",
+        "CONDENSER OUTLET",
+        "Temperature: " + fmt(cycle.condenserTemperature, "°C"),
+        "Enthalpy: " + fmt(cycle.condenserEnthalpyKJ, "kJ/kg"),
+        "Subcooling: " + fmt(cycle.liquidSubcoolingK, "K"),
+        "",
+        "EXPANSION OUTLET",
+        "Enthalpy: " + fmt(cycle.expansionEnthalpyKJ, "kJ/kg"),
+        "",
+        "CYCLE PERFORMANCE",
+        "Refrigeration effect: " + fmt(cycle.refrigerationEffectKJ, "kJ/kg"),
+        "Compressor work: " + fmt(cycle.compressorWorkKJ, "kJ/kg"),
+        "Calculated COP (based on entered states): " + (cycle.cop === null ? "N/A" : cycle.cop.toFixed(2)),
+        "",
+        "Assumes steady-state throttling with constant enthalpy; heat losses and pressure drops are not modelled.",
+        "Prototype calculation; verify before engineering use."
+      ].join("\n");
+    }
+    function downloadText(text, filename) {
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    const jobsKey = "refrigerantCycleProJobsV1";
+    function readJobs() {
+      try { return JSON.parse(localStorage.getItem(jobsKey) || "[]"); }
+      catch { return []; }
+    }
+    function validJob(job) {
+      return job && typeof job === "object" &&
+        (typeof job.id === "number" || typeof job.id === "string") &&
+        typeof job.name === "string" && typeof job.created === "string" &&
+        job.cycle && typeof job.cycle === "object" &&
+        typeof job.cycle.refrigerant === "string" &&
+        ["suctionPressure", "dischargePressure", "suctionTemperature", "dischargeTemperature", "condenserTemperature"].every(k =>
+          typeof job.cycle[k] === "number" && Number.isFinite(job.cycle[k]));
+    }
+    document.getElementById("backupJobs").addEventListener("click", () => {
+      const jobs = readJobs();
+      if (!jobs.length) { alert("There are no saved jobs to back up on this installation."); return; }
+      const backup = { format: "RefrigerantCycleProJobs", version: 1, exportedAt: new Date().toISOString(), jobs };
+      downloadText(JSON.stringify(backup, null, 2), "refrigerant-cycle-jobs-backup.json");
+      document.getElementById("backupStatus").textContent = "Backup prepared for download: " + jobs.length + " job(s). Save the JSON file in Files.";
+    });
+    document.getElementById("restoreJobs").addEventListener("click", () => document.getElementById("restoreJobsFile").click());
+    document.getElementById("restoreJobsFile").addEventListener("change", async (event) => {
+      const input = event.currentTarget;
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const status = document.getElementById("backupStatus");
+      try {
+        if (file.size > 5 * 1024 * 1024) throw new Error("Backup file is too large (maximum 5 MB).");
+        const data = JSON.parse(await file.text());
+        if (!data || data.format !== "RefrigerantCycleProJobs" || data.version !== 1 ||
+            !Array.isArray(data.jobs) || data.jobs.length > 10000 || !data.jobs.every(validJob)) {
+          throw new Error("This is not a valid Refrigerant Cycle Pro jobs backup (.json).");
+        }
+        const existing = readJobs();
+        if (!Array.isArray(existing)) throw new Error("Existing jobs could not be read safely.");
+        const seen = new Set(existing.map(j => String(j.id)));
+        const additions = data.jobs.filter(j => !seen.has(String(j.id)));
+        if (!additions.length) { status.textContent = "No new jobs to restore; existing jobs were left unchanged."; return; }
+        if (!confirm("Restore " + additions.length + " job(s)? Existing saved jobs will be kept.")) return;
+        const merged = [...additions, ...existing];
+        localStorage.setItem(jobsKey, JSON.stringify(merged));
+        renderJobs();
+        status.textContent = "Restored " + additions.length + " job(s). Existing jobs were kept.";
+        alert("Restored " + additions.length + " job(s) successfully.");
+      } catch (error) {
+        status.textContent = "Restore failed: " + error.message;
+        alert(status.textContent + " Your saved jobs have not been intentionally changed.");
+      } finally { input.value = ""; }
+    });
+    function renderJobs() {
+      const holder = document.getElementById("savedJobs");
+      holder.replaceChildren();
+      const jobs = readJobs();
+      if (!jobs.length) { holder.textContent = "No saved jobs yet."; return; }
+      const heading = document.createElement("h3");
+      heading.textContent = "Saved jobs (" + jobs.length + ")";
+      holder.appendChild(heading);
+      jobs.forEach(job => {
+        const row = document.createElement("div");
+        row.className = "saved-job";
+        const label = document.createElement("strong");
+        label.textContent = job.name + " — " + job.cycle.refrigerant + " (" + new Date(job.created).toLocaleString() + ")";
+        row.appendChild(label);
+        const download = document.createElement("button");
+        download.textContent = "Download report";
+        download.addEventListener("click", () => downloadText(makeReport(job.cycle, job.name), "refrigerant-job-" + job.id + ".txt"));
+        const remove = document.createElement("button");
+        remove.textContent = "Delete";
+        remove.addEventListener("click", () => {
+          if (!confirm("Delete this saved job from this browser?")) return;
+          localStorage.setItem(jobsKey, JSON.stringify(readJobs().filter(x => x.id !== job.id)));
+          renderJobs();
+        });
+        row.appendChild(document.createElement("br"));
+        row.append(download, remove);
+        holder.appendChild(row);
+      });
+    }
+    document.getElementById("downloadReport").addEventListener("click", () => {
+      if (!window.latestCycle) return;
+      downloadText(makeReport(window.latestCycle, document.getElementById("jobName").value.trim()), "refrigerant-cycle-report.txt");
+    });
+    document.getElementById("saveJob").addEventListener("click", () => {
+      if (!window.latestCycle) return;
+      const name = document.getElementById("jobName").value.trim() || "Unnamed job";
+      const job = { id: Date.now(), name, created: new Date().toISOString(), cycle: window.latestCycle };
+      try {
+        const jobs = readJobs();
+        jobs.unshift(job);
+        localStorage.setItem(jobsKey, JSON.stringify(jobs));
+        renderJobs();
+        alert("Job saved in this browser.");
+      } catch (e) { alert("Could not save job: " + e.message); }
+    });
+    renderJobs();
+  </script>
+</body>
+</html>
